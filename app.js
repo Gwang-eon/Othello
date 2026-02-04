@@ -23,6 +23,9 @@ let HUMAN = BLACK;
 let AI = WHITE;
 let hardDepth = Number(depthSelect.value);
 let lastMove = null;
+let lastTurn = currentPlayer;
+let audioCtx = null;
+let audioReady = false;
 
 const directions = [
   [-1, -1],
@@ -112,6 +115,52 @@ const updateStats = () => {
   blackCountEl.textContent = black;
   whiteCountEl.textContent = white;
   turnIndicatorEl.textContent = currentPlayer === BLACK ? "흑" : "백";
+};
+
+const initAudio = () => {
+  if (audioReady) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  audioReady = true;
+};
+
+const playTone = (frequency, duration, type = "sine", volume = 0.08) => {
+  if (!audioReady || !audioCtx) return;
+  const oscillator = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  oscillator.type = type;
+  oscillator.frequency.value = frequency;
+  gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+  oscillator.connect(gain);
+  gain.connect(audioCtx.destination);
+  oscillator.start();
+  oscillator.stop(audioCtx.currentTime + duration);
+};
+
+const playMoveSound = () => playTone(440, 0.08, "triangle", 0.08);
+
+const playFlipSound = (count) => {
+  const base = count >= 5 ? 520 : 480;
+  playTone(base, 0.06, "sine", 0.06);
+  playTone(base + 120, 0.07, "sine", 0.04);
+};
+
+const playTurnSound = () => playTone(360, 0.07, "triangle", 0.05);
+
+const playPassSound = () => playTone(280, 0.08, "sine", 0.04);
+
+const pulseStatus = () => {
+  statusEl.classList.remove("pulse");
+  void statusEl.offsetWidth;
+  statusEl.classList.add("pulse");
+  setTimeout(() => statusEl.classList.remove("pulse"), 350);
+};
+
+const flashCombo = (count) => {
+  if (count < 3) return;
+  const wrap = boardEl.parentElement;
+  wrap.classList.add("combo");
+  setTimeout(() => wrap.classList.remove("combo"), 220);
 };
 
 const cloneBoard = (boardState) => boardState.map((row) => row.slice());
@@ -247,6 +296,9 @@ const maybeAutoMove = () => {
     if (chosen) {
       applyMove(chosen, AI);
       lastMove = { row: chosen.row, col: chosen.col, flips: chosen.flips };
+      playMoveSound();
+      playFlipSound(chosen.flips.length);
+      flashCombo(chosen.flips.length);
       currentPlayer = opponent(currentPlayer);
     }
     aiThinking = false;
@@ -266,6 +318,12 @@ const renderBoard = () => {
       cell.setAttribute("role", "gridcell");
       cell.dataset.row = row;
       cell.dataset.col = col;
+      if (lastMove && lastMove.row === row && lastMove.col === col) {
+        cell.classList.add("last");
+      }
+      if (lastMove && lastMove.flips?.some(([r, c]) => r === row && c === col)) {
+        cell.classList.add("flipped");
+      }
 
       const value = board[row][col];
       if (value === BLACK || value === WHITE) {
@@ -290,6 +348,11 @@ const renderBoard = () => {
 
   updateStats();
   updateStatus(validMoves);
+  if (currentPlayer !== lastTurn) {
+    playTurnSound();
+    pulseStatus();
+    lastTurn = currentPlayer;
+  }
   maybeAutoMove();
 };
 
@@ -310,6 +373,8 @@ const updateStatus = (validMoves) => {
 
     statusEl.textContent = "놓을 수 있는 칸이 없어 턴이 넘어갑니다.";
     currentPlayer = opponent(currentPlayer);
+    playPassSound();
+    pulseStatus();
     setTimeout(renderBoard, 450);
     return;
   }
@@ -332,6 +397,9 @@ const handleClick = (event) => {
 
   applyMove(chosen);
   lastMove = { row, col, flips: chosen.flips };
+  playMoveSound();
+  playFlipSound(chosen.flips.length);
+  flashCombo(chosen.flips.length);
   currentPlayer = opponent(currentPlayer);
   renderBoard();
 };
@@ -345,6 +413,7 @@ const restart = () => {
   }`;
   createBoard();
   lastMove = null;
+  lastTurn = currentPlayer;
   renderBoard();
 };
 
@@ -371,5 +440,6 @@ depthSelect.addEventListener("change", () => {
 boardEl.addEventListener("click", handleClick);
 restartBtn.addEventListener("click", restart);
 toggleHintsBtn.addEventListener("click", toggleHints);
+window.addEventListener("pointerdown", initAudio, { once: true });
 
 restart();
