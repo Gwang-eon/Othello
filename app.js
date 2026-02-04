@@ -22,6 +22,7 @@ let aiThinking = false;
 let HUMAN = BLACK;
 let AI = WHITE;
 let hardDepth = Number(depthSelect.value);
+let lastMove = null;
 
 const directions = [
   [-1, -1],
@@ -245,6 +246,7 @@ const maybeAutoMove = () => {
     const chosen = chooseAIMove(validMoves);
     if (chosen) {
       applyMove(chosen, AI);
+      lastMove = { row: chosen.row, col: chosen.col, flips: chosen.flips };
       currentPlayer = opponent(currentPlayer);
     }
     aiThinking = false;
@@ -269,6 +271,12 @@ const renderBoard = () => {
       if (value === BLACK || value === WHITE) {
         const disk = document.createElement("div");
         disk.className = `disk ${value === BLACK ? "black" : "white"}`;
+        if (lastMove && lastMove.row === row && lastMove.col === col) {
+          disk.classList.add("spawn");
+        }
+        if (lastMove && lastMove.flips?.some(([r, c]) => r === row && c === col)) {
+          disk.classList.add("flip");
+        }
         cell.appendChild(disk);
       }
 
@@ -323,6 +331,7 @@ const handleClick = (event) => {
   if (!chosen) return;
 
   applyMove(chosen);
+  lastMove = { row, col, flips: chosen.flips };
   currentPlayer = opponent(currentPlayer);
   renderBoard();
 };
@@ -335,6 +344,7 @@ const restart = () => {
     AI === BLACK ? "흑" : "백"
   }`;
   createBoard();
+  lastMove = null;
   renderBoard();
 };
 
