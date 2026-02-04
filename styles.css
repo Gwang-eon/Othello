@@ -244,28 +244,6 @@ h1 {
 
 .status {
   position: relative;
-  overflow: hidden;
-}
-
-.status.pulse::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(120deg, rgba(255, 122, 89, 0.22), rgba(59, 130, 246, 0.18));
-  opacity: 0;
-  animation: statusPulse 0.35s ease;
-}
-
-@keyframes statusPulse {
-  0% {
-    opacity: 0;
-  }
-  40% {
-    opacity: 0.7;
-  }
-  100% {
-    opacity: 0;
-  }
 }
 
 @keyframes spawn {

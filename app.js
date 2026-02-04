@@ -149,13 +149,6 @@ const playTurnSound = () => playTone(360, 0.07, "triangle", 0.05);
 
 const playPassSound = () => playTone(280, 0.08, "sine", 0.04);
 
-const pulseStatus = () => {
-  statusEl.classList.remove("pulse");
-  void statusEl.offsetWidth;
-  statusEl.classList.add("pulse");
-  setTimeout(() => statusEl.classList.remove("pulse"), 350);
-};
-
 const flashCombo = (count) => {
   if (count < 3) return;
   const wrap = boardEl.parentElement;
@@ -350,7 +343,6 @@ const renderBoard = () => {
   updateStatus(validMoves);
   if (currentPlayer !== lastTurn) {
     playTurnSound();
-    pulseStatus();
     lastTurn = currentPlayer;
   }
   maybeAutoMove();
@@ -374,7 +366,6 @@ const updateStatus = (validMoves) => {
     statusEl.textContent = "놓을 수 있는 칸이 없어 턴이 넘어갑니다.";
     currentPlayer = opponent(currentPlayer);
     playPassSound();
-    pulseStatus();
     setTimeout(renderBoard, 450);
     return;
   }
