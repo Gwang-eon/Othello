@@ -13,6 +13,7 @@ const restartBtn = document.getElementById("restart");
 const toggleHintsBtn = document.getElementById("toggle-hints");
 const difficultySelect = document.getElementById("difficulty");
 const depthSelect = document.getElementById("depth");
+const tempoInput = document.getElementById("tempo");
 
 let board = [];
 let currentPlayer = BLACK;
@@ -26,6 +27,7 @@ let lastMove = null;
 let lastTurn = currentPlayer;
 let audioCtx = null;
 let audioReady = false;
+let tempo = Number(tempoInput.value);
 
 const directions = [
   [-1, -1],
@@ -128,7 +130,7 @@ const playTone = (frequency, duration, type = "sine", volume = 0.08) => {
   const oscillator = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
   oscillator.type = type;
-  oscillator.frequency.value = frequency;
+  oscillator.frequency.value = frequency * (0.95 + tempo * 0.05);
   gain.gain.setValueAtTime(volume, audioCtx.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
   oscillator.connect(gain);
@@ -154,6 +156,16 @@ const flashCombo = (count) => {
   const wrap = boardEl.parentElement;
   wrap.classList.add("combo");
   setTimeout(() => wrap.classList.remove("combo"), 220);
+};
+
+const shakeBoard = () => {
+  const wrap = boardEl.parentElement;
+  wrap.classList.remove("shake");
+  void wrap.offsetWidth;
+  wrap.classList.add("shake");
+  const duration = Math.max(140, 240 / tempo);
+  boardEl.style.animationDuration = `${duration}ms`;
+  setTimeout(() => wrap.classList.remove("shake"), duration + 20);
 };
 
 const cloneBoard = (boardState) => boardState.map((row) => row.slice());
@@ -324,9 +336,19 @@ const renderBoard = () => {
         disk.className = `disk ${value === BLACK ? "black" : "white"}`;
         if (lastMove && lastMove.row === row && lastMove.col === col) {
           disk.classList.add("spawn");
+          const spawnDuration = Math.max(160, 320 - lastMove.flips.length * 8);
+          disk.style.setProperty("--spawn-duration", `${spawnDuration / tempo}ms`);
         }
         if (lastMove && lastMove.flips?.some(([r, c]) => r === row && c === col)) {
           disk.classList.add("flip");
+          const index = lastMove.flips.findIndex(([r, c]) => r === row && c === col);
+          const flipCount = Math.max(1, lastMove.flips.length);
+          const speedBoost = Math.max(0, Math.min(4, flipCount - 3));
+          const delayStep = Math.max(16, 38 - speedBoost * 4);
+          const delay = Math.min(140, index * delayStep);
+          const flipDuration = Math.max(220, 520 - speedBoost * 60);
+          disk.style.animationDelay = `${delay / tempo}ms`;
+          disk.style.setProperty("--flip-duration", `${flipDuration / tempo}ms`);
         }
         cell.appendChild(disk);
       }
@@ -391,6 +413,7 @@ const handleClick = (event) => {
   playMoveSound();
   playFlipSound(chosen.flips.length);
   flashCombo(chosen.flips.length);
+  shakeBoard();
   currentPlayer = opponent(currentPlayer);
   renderBoard();
 };
@@ -426,6 +449,10 @@ depthSelect.addEventListener("change", () => {
   if (currentPlayer === AI) {
     renderBoard();
   }
+});
+
+tempoInput.addEventListener("input", () => {
+  tempo = Number(tempoInput.value);
 });
 
 boardEl.addEventListener("click", handleClick);
