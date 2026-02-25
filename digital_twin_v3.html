@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사출공정 전동설비 탄력 적응형 DR 디지털 트윈</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: #0a0e1a;
+    color: #e0e6f0;
+    overflow: hidden;
+    width: 1920px;
+    height: 1080px;
+  }
+
+  /* ===== HEADER ===== */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 30px;
+    background: linear-gradient(90deg, #0d1224 0%, #131b36 50%, #0d1224 100%);
+    border-bottom: 2px solid #1a3a6a;
+    height: 60px;
+  }
+  .header-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    background: linear-gradient(90deg, #4fc3f7, #81d4fa, #29b6f6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .header-stats {
+    display: flex;
+    gap: 30px;
+    align-items: center;
+  }
+  .header-stat {
+    text-align: center;
+  }
+  .header-stat .label {
+    font-size: 10px;
+    color: #7a8bb5;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .header-stat .value {
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .header-stat .value.blue { color: #4fc3f7; }
+  .header-stat .value.green { color: #66bb6a; }
+  .header-stat .value.orange { color: #ffa726; }
+  .header-stat .value.red { color: #ef5350; }
+  .header-stat .unit { font-size: 11px; color: #7a8bb5; }
+  .header-icons {
+    display: flex;
+    gap: 12px;
+  }
+  .header-icon {
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    background: rgba(79,195,247,0.1);
+    border: 1px solid rgba(79,195,247,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .dr-badge {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,167,38,0.15);
+    border: 1px solid rgba(255,167,38,0.4);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #ffa726;
+  }
+  .dr-badge .dot {
+    width: 8px; height: 8px;
+    background: #ffa726;
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ===== MAIN LAYOUT ===== */
+  .main {
+    display: grid;
+    grid-template-columns: 280px 1fr 320px;
+    grid-template-rows: 1fr;
+    gap: 0;
+    height: calc(1080px - 60px);
+  }
+
+  /* ===== LEFT PANEL ===== */
+  .left-panel {
+    background: #0d1224;
+    border-right: 1px solid #1a2744;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: hidden;
+  }
+
+  .panel-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #4fc3f7;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #1a2744;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 1px;
+  }
+  .panel-title::before {
+    content: '';
+    width: 3px; height: 14px;
+    background: #4fc3f7;
+    border-radius: 2px;
+  }
+
+  /* Motor Cards */
+  .motor-card {
+    background: linear-gradient(135deg, #111a33 0%, #0e1528 100%);
+    border: 1px solid #1a2d55;
+    border-radius: 10px;
+    padding: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .motor-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .motor-card.normal::before { background: linear-gradient(90deg, transparent, #66bb6a, transparent); }
+  .motor-card.warning::before { background: linear-gradient(90deg, transparent, #ffa726, transparent); }
+  .motor-card.dr-active::before { background: linear-gradient(90deg, transparent, #29b6f6, transparent); }
+
+  .motor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .motor-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: #e0e6f0;
+  }
+  .motor-status {
+    font-size: 9px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+  .motor-status.running { background: rgba(102,187,106,0.2); color: #66bb6a; border: 1px solid rgba(102,187,106,0.3); }
+  .motor-status.dr-mode { background: rgba(41,182,246,0.2); color: #29b6f6; border: 1px solid rgba(41,182,246,0.3); }
+  .motor-status.warning { background: rgba(255,167,38,0.2); color: #ffa726; border: 1px solid rgba(255,167,38,0.3); }
+
+  .motor-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .motor-metric {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    padding: 3px 0;
+  }
+  .motor-metric .label { color: #7a8bb5; }
+  .motor-metric .val { font-weight: 600; color: #b0c4de; }
+  .motor-metric .val.highlight { color: #4fc3f7; }
+
+  .motor-bar {
+    margin-top: 6px;
+    height: 4px;
+    background: #1a2744;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .motor-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.5s;
+  }
+  .motor-bar-fill.green { background: linear-gradient(90deg, #66bb6a, #81c784); }
+  .motor-bar-fill.blue { background: linear-gradient(90deg, #29b6f6, #4fc3f7); }
+  .motor-bar-fill.orange { background: linear-gradient(90deg, #ff9800, #ffa726); }
+
+  .motor-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    color: #556b8a;
+    margin-top: 2px;
+  }
+
+  /* ===== CENTER PANEL ===== */
+  .center-panel {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  /* Process Visualization */
+  .process-viz {
+    flex: 1;
+    position: relative;
+    background: linear-gradient(180deg, #0e1528 0%, #111d35 50%, #0e1528 100%);
+    overflow: hidden;
+  }
+
+  .process-label {
+    position: absolute;
+    top: 10px;
+    left: 16px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #4fc3f7;
+    letter-spacing: 1px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .process-label::before {
+    content: '';
+    width: 3px; height: 14px;
+    background: #4fc3f7;
+    border-radius: 2px;
+  }
+
+  /* Process Flow SVG */
+  .process-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Bottom Stats */
+  .bottom-stats {
+    height: 240px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    border-top: 1px solid #1a2744;
+  }
+  .bottom-panel {
+    padding: 12px 16px;
+    border-right: 1px solid #1a2744;
+    background: #0d1224;
+  }
+  .bottom-panel:last-child { border-right: none; }
+
+  /* Power Donut */
+  .donut-container {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 8px;
+  }
+  .donut-svg { width: 120px; height: 120px; }
+  .donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+  }
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 2px;
+  }
+
+  /* Process Table */
+  .process-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+    font-size: 10px;
+  }
+  .process-table th {
+    background: rgba(79,195,247,0.08);
+    color: #7a8bb5;
+    font-weight: 500;
+    padding: 5px 6px;
+    text-align: center;
+    border-bottom: 1px solid #1a2744;
+    font-size: 9px;
+  }
+  .process-table td {
+    padding: 5px 6px;
+    text-align: center;
+    border-bottom: 1px solid rgba(26,39,68,0.5);
+    color: #b0c4de;
+  }
+  .process-table tr:hover { background: rgba(79,195,247,0.03); }
+  .td-status {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    margin-right: 4px;
+  }
+  .td-status.green { background: #66bb6a; }
+  .td-status.blue { background: #29b6f6; }
+  .td-status.orange { background: #ffa726; }
+
+  /* Time chart */
+  .time-chart {
+    margin-top: 8px;
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 140px;
+    padding-bottom: 20px;
+    position: relative;
+  }
+  .time-bar-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .time-bar {
+    width: 100%;
+    border-radius: 3px 3px 0 0;
+    min-height: 2px;
+  }
+  .time-bar.consumption { background: linear-gradient(180deg, #ffa726, #f57c00); }
+  .time-bar.dr-save { background: linear-gradient(180deg, #29b6f6, #0288d1); }
+  .time-bar.baseline { background: linear-gradient(180deg, #455a7a, #37474f); }
+  .time-label {
+    font-size: 8px;
+    color: #556b8a;
+    margin-top: 4px;
+  }
+  .time-bars-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 1px;
+  }
+
+  /* ===== RIGHT PANEL ===== */
+  .right-panel {
+    background: #0d1224;
+    border-left: 1px solid #1a2744;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: hidden;
+  }
+
+  /* AI Prediction */
+  .ai-chart {
+    height: 120px;
+    position: relative;
+    margin-top: 6px;
+  }
+  .ai-chart svg { width: 100%; height: 100%; }
+
+  /* DR Status */
+  .dr-status-card {
+    background: linear-gradient(135deg, #111a33, #0e1528);
+    border: 1px solid #1a2d55;
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .dr-big-number {
+    font-size: 36px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #29b6f6, #4fc3f7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+  }
+  .dr-target-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #1a2744;
+  }
+  .dr-target-label { font-size: 11px; color: #7a8bb5; }
+  .dr-target-val { font-size: 14px; font-weight: 700; color: #ffa726; }
+
+  .dr-progress-bar {
+    height: 8px;
+    background: #1a2744;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .dr-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #29b6f6, #4fc3f7);
+    border-radius: 4px;
+    width: 68%;
+  }
+
+  /* Inverter Control */
+  .inverter-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .inverter-card {
+    background: rgba(17,26,51,0.8);
+    border: 1px solid #1a2d55;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+  }
+  .inverter-card .inv-label {
+    font-size: 9px;
+    color: #556b8a;
+    margin-bottom: 4px;
+  }
+  .inverter-card .inv-value {
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .inverter-card .inv-unit {
+    font-size: 9px;
+    color: #7a8bb5;
+  }
+
+  /* OpenADR */
+  .adr-timeline {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .adr-event {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: rgba(17,26,51,0.6);
+    border-radius: 6px;
+    border-left: 3px solid;
+    font-size: 10px;
+  }
+  .adr-event.active { border-left-color: #ffa726; background: rgba(255,167,38,0.08); }
+  .adr-event.scheduled { border-left-color: #29b6f6; }
+  .adr-event.completed { border-left-color: #66bb6a; }
+  .adr-event .adr-time {
+    font-weight: 600;
+    color: #b0c4de;
+    min-width: 50px;
+  }
+  .adr-event .adr-desc { color: #7a8bb5; }
+
+  /* Quality Panel */
+  .quality-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .quality-item {
+    text-align: center;
+    padding: 8px;
+    background: rgba(17,26,51,0.6);
+    border-radius: 6px;
+    border: 1px solid #1a2d55;
+  }
+  .quality-item .q-val {
+    font-size: 16px;
+    font-weight: 700;
+    color: #66bb6a;
+  }
+  .quality-item .q-label {
+    font-size: 9px;
+    color: #556b8a;
+    margin-top: 2px;
+  }
+
+  /* Grid lines background effect */
+  .grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(79,195,247,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79,195,247,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  /* Flow animation */
+  @keyframes flowRight {
+    from { stroke-dashoffset: 20; }
+    to { stroke-dashoffset: 0; }
+  }
+  .flow-line {
+    stroke-dasharray: 10 10;
+    animation: flowRight 1s linear infinite;
+  }
+
+  /* Glow effects */
+  .glow-green { filter: drop-shadow(0 0 4px rgba(102,187,106,0.5)); }
+  .glow-blue { filter: drop-shadow(0 0 4px rgba(41,182,246,0.5)); }
+  .glow-orange { filter: drop-shadow(0 0 4px rgba(255,167,38,0.5)); }
+
+  /* Node labels in process */
+  .node-box {
+    fill: rgba(13,18,36,0.9);
+    stroke: #1a3a6a;
+    stroke-width: 1;
+    rx: 8;
+  }
+  .node-title { font-size: 13px; font-weight: 700; fill: #e0e6f0; font-family: 'Noto Sans KR', sans-serif; }
+  .node-value { font-size: 18px; font-weight: 900; fill: #4fc3f7; font-family: 'Noto Sans KR', sans-serif; }
+  .node-unit { font-size: 10px; fill: #7a8bb5; font-family: 'Noto Sans KR', sans-serif; }
+  .node-sub { font-size: 10px; fill: #66bb6a; font-family: 'Noto Sans KR', sans-serif; }
+
+  .motor-icon-svg {
+    animation: spin 3s linear infinite;
+    transform-origin: center;
+  }
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<div class="header">
+  <div class="header-title">사출공정 전동설비 탄력 적응형 DR 디지털 트윈</div>
+  <div class="header-stats">
+    <div class="header-stat">
+      <div class="label">총 전력</div>
+      <div class="value blue">1,240<span class="unit"> kW</span></div>
+    </div>
+    <div class="header-stat">
+      <div class="label">DR 감발량</div>
+      <div class="value orange">186<span class="unit"> kW</span></div>
+    </div>
+    <div class="header-stat">
+      <div class="label">전 공정 효율</div>
+      <div class="value green">94.7<span class="unit"> %</span></div>
+    </div>
+    <div class="header-stat">
+      <div class="label">모터 가동률</div>
+      <div class="value blue">87.3<span class="unit"> %</span></div>
+    </div>
+    <div class="dr-badge">
+      <div class="dot"></div>
+      DR 이벤트 활성
+    </div>
+  </div>
+  <div class="header-icons">
+    <div class="header-icon">⚙</div>
+    <div class="header-icon">🔔</div>
+    <div class="header-icon">👤</div>
+  </div>
+</div>
+
+<!-- ===== MAIN ===== -->
+<div class="main">
+
+  <!-- LEFT PANEL: Motor Status -->
+  <div class="left-panel">
+    <div class="panel-title">전동기 실시간 상태</div>
+
+    <!-- Motor 1: 사출 유닛 모터 -->
+    <div class="motor-card dr-active">
+      <div class="motor-header">
+        <div class="motor-name">🔵 #1 사출 유닛 모터</div>
+        <div class="motor-status dr-mode">DR 감발</div>
+      </div>
+      <div class="motor-metrics">
+        <div class="motor-metric"><span class="label">전력</span><span class="val highlight">185 kW</span></div>
+        <div class="motor-metric"><span class="label">RPM</span><span class="val">1,420</span></div>
+        <div class="motor-metric"><span class="label">전류</span><span class="val">312 A</span></div>
+        <div class="motor-metric"><span class="label">역률</span><span class="val">0.92</span></div>
+        <div class="motor-metric"><span class="label">토크</span><span class="val">1,245 Nm</span></div>
+        <div class="motor-metric"><span class="label">온도</span><span class="val">62°C</span></div>
+      </div>
+      <div class="motor-bar"><div class="motor-bar-fill blue" style="width:72%"></div></div>
+      <div class="motor-bar-label"><span>효율 72%</span><span>인버터: 48Hz</span></div>
+    </div>
+
+    <!-- Motor 2: 형체 구동 모터 -->
+    <div class="motor-card normal">
+      <div class="motor-header">
+        <div class="motor-name">🟢 #2 형체 구동 모터</div>
+        <div class="motor-status running">정상 가동</div>
+      </div>
+      <div class="motor-metrics">
+        <div class="motor-metric"><span class="label">전력</span><span class="val highlight">320 kW</span></div>
+        <div class="motor-metric"><span class="label">RPM</span><span class="val">1,780</span></div>
+        <div class="motor-metric"><span class="label">전류</span><span class="val">540 A</span></div>
+        <div class="motor-metric"><span class="label">역률</span><span class="val">0.95</span></div>
+        <div class="motor-metric"><span class="label">토크</span><span class="val">1,716 Nm</span></div>
+        <div class="motor-metric"><span class="label">온도</span><span class="val">58°C</span></div>
+      </div>
+      <div class="motor-bar"><div class="motor-bar-fill green" style="width:89%"></div></div>
+      <div class="motor-bar-label"><span>효율 89%</span><span>인버터: 60Hz</span></div>
+    </div>
+
+    <!-- Motor 3: 유압 펌프 모터 -->
+    <div class="motor-card warning">
+      <div class="motor-header">
+        <div class="motor-name">🟠 #3 유압 펌프 모터</div>
+        <div class="motor-status warning">부하 경고</div>
+      </div>
+      <div class="motor-metrics">
+        <div class="motor-metric"><span class="label">전력</span><span class="val highlight">410 kW</span></div>
+        <div class="motor-metric"><span class="label">RPM</span><span class="val">1,180</span></div>
+        <div class="motor-metric"><span class="label">전류</span><span class="val">695 A</span></div>
+        <div class="motor-metric"><span class="label">역률</span><span class="val">0.88</span></div>
+        <div class="motor-metric"><span class="label">토크</span><span class="val">3,320 Nm</span></div>
+        <div class="motor-metric"><span class="label">온도</span><span class="val">74°C</span></div>
+      </div>
+      <div class="motor-bar"><div class="motor-bar-fill orange" style="width:93%"></div></div>
+      <div class="motor-bar-label"><span>부하율 93%</span><span>인버터: 55Hz</span></div>
+    </div>
+
+    <!-- Motor 4: 냉각 펌프 모터 -->
+    <div class="motor-card dr-active">
+      <div class="motor-header">
+        <div class="motor-name">🔵 #4 냉각수 펌프 모터</div>
+        <div class="motor-status dr-mode">DR 감발</div>
+      </div>
+      <div class="motor-metrics">
+        <div class="motor-metric"><span class="label">전력</span><span class="val highlight">75 kW</span></div>
+        <div class="motor-metric"><span class="label">RPM</span><span class="val">2,880</span></div>
+        <div class="motor-metric"><span class="label">전류</span><span class="val">128 A</span></div>
+        <div class="motor-metric"><span class="label">역률</span><span class="val">0.91</span></div>
+        <div class="motor-metric"><span class="label">토크</span><span class="val">249 Nm</span></div>
+        <div class="motor-metric"><span class="label">온도</span><span class="val">45°C</span></div>
+      </div>
+      <div class="motor-bar"><div class="motor-bar-fill blue" style="width:65%"></div></div>
+      <div class="motor-bar-label"><span>효율 65%</span><span>인버터: 42Hz</span></div>
+    </div>
+
+    <!-- Motor 5: 압출기 모터 -->
+    <div class="motor-card normal">
+      <div class="motor-header">
+        <div class="motor-name">🟢 #5 압출기 스크류 모터</div>
+        <div class="motor-status running">정상 가동</div>
+      </div>
+      <div class="motor-metrics">
+        <div class="motor-metric"><span class="label">전력</span><span class="val highlight">250 kW</span></div>
+        <div class="motor-metric"><span class="label">RPM</span><span class="val">850</span></div>
+        <div class="motor-metric"><span class="label">전류</span><span class="val">420 A</span></div>
+        <div class="motor-metric"><span class="label">역률</span><span class="val">0.93</span></div>
+        <div class="motor-metric"><span class="label">토크</span><span class="val">2,808 Nm</span></div>
+        <div class="motor-metric"><span class="label">온도</span><span class="val">56°C</span></div>
+      </div>
+      <div class="motor-bar"><div class="motor-bar-fill green" style="width:85%"></div></div>
+      <div class="motor-bar-label"><span>효율 85%</span><span>인버터: 58Hz</span></div>
+    </div>
+  </div>
+
+  <!-- CENTER PANEL -->
+  <div class="center-panel">
+    <!-- Process Visualization -->
+    <div class="process-viz">
+      <div class="grid-bg"></div>
+      <div class="process-label">사출 공정 디지털 트윈 모니터링</div>
+
+      <svg class="process-svg" viewBox="0 0 1320 540">
+        <!-- Flow lines connecting processes -->
+        <line x1="140" y1="200" x2="300" y2="200" stroke="#1a3a6a" stroke-width="2" class="flow-line"/>
+        <line x1="480" y1="200" x2="560" y2="200" stroke="#1a3a6a" stroke-width="2" class="flow-line"/>
+        <line x1="560" y1="200" x2="560" y2="300" stroke="#1a3a6a" stroke-width="2" class="flow-line"/>
+        <line x1="560" y1="300" x2="680" y2="300" stroke="#1a3a6a" stroke-width="2" class="flow-line"/>
+        <line x1="860" y1="300" x2="940" y2="300" stroke="#29b6f6" stroke-width="2" class="flow-line"/>
+        <line x1="1120" y1="300" x2="1200" y2="200" stroke="#1a3a6a" stroke-width="2" class="flow-line"/>
+
+        <!-- Arrows -->
+        <polygon points="295,195 305,200 295,205" fill="#29b6f6"/>
+        <polygon points="555,195 565,200 555,205" fill="#29b6f6"/>
+        <polygon points="675,295 685,300 675,305" fill="#29b6f6"/>
+        <polygon points="935,295 945,300 935,305" fill="#29b6f6"/>
+
+        <!-- ===== 원료 투입 ===== -->
+        <g transform="translate(30,120)">
+          <rect class="node-box" x="0" y="0" width="120" height="100" style="stroke: #455a7a;"/>
+          <text class="node-title" x="60" y="25" text-anchor="middle">원료 투입</text>
+          <text class="node-value" x="60" y="52" text-anchor="middle">PE/PP</text>
+          <text class="node-sub" x="60" y="72" text-anchor="middle">수지 온도 220°C</text>
+          <text class="node-unit" x="60" y="88" text-anchor="middle">투입량 450 kg/h</text>
+        </g>
+
+        <!-- ===== 가소화 (스크류) ===== -->
+        <g transform="translate(300,100)">
+          <rect class="node-box" x="0" y="0" width="180" height="140" style="stroke: #29b6f6;"/>
+          <!-- Motor icon -->
+          <circle cx="90" cy="38" r="16" fill="none" stroke="#29b6f6" stroke-width="2"/>
+          <text x="90" y="43" text-anchor="middle" font-size="14" fill="#29b6f6">⚡</text>
+          <text class="node-title" x="90" y="72" text-anchor="middle">가소화 (스크류)</text>
+          <text class="node-value" x="90" y="95" text-anchor="middle">185 kW</text>
+          <text class="node-sub" x="90" y="112" text-anchor="middle">1,420 RPM | 48Hz</text>
+          <text x="90" y="130" text-anchor="middle" font-size="10" fill="#29b6f6" font-family="Noto Sans KR">🔵 DR 감발 중 (-42kW)</text>
+        </g>
+
+        <!-- ===== 사출 충전 ===== -->
+        <g transform="translate(680,230)">
+          <rect class="node-box" x="0" y="0" width="180" height="140" style="stroke: #66bb6a;"/>
+          <circle cx="90" cy="38" r="16" fill="none" stroke="#66bb6a" stroke-width="2"/>
+          <text x="90" y="43" text-anchor="middle" font-size="14" fill="#66bb6a">⚡</text>
+          <text class="node-title" x="90" y="72" text-anchor="middle">사출 충전 / 형체</text>
+          <text class="node-value" x="90" y="95" text-anchor="middle">320 kW</text>
+          <text class="node-sub" x="90" y="112" text-anchor="middle">1,780 RPM | 60Hz</text>
+          <text x="90" y="130" text-anchor="middle" font-size="10" fill="#66bb6a" font-family="Noto Sans KR">🟢 정상 가동</text>
+        </g>
+
+        <!-- ===== 유압 시스템 ===== -->
+        <g transform="translate(400,340)">
+          <rect class="node-box" x="0" y="0" width="170" height="130" style="stroke: #ffa726;"/>
+          <circle cx="85" cy="35" r="16" fill="none" stroke="#ffa726" stroke-width="2"/>
+          <text x="85" y="40" text-anchor="middle" font-size="14" fill="#ffa726">⚡</text>
+          <text class="node-title" x="85" y="68" text-anchor="middle">유압 펌프</text>
+          <text class="node-value" x="85" y="90" text-anchor="middle">410 kW</text>
+          <text class="node-sub" x="85" y="107" text-anchor="middle">1,180 RPM | 55Hz</text>
+          <text x="85" y="124" text-anchor="middle" font-size="10" fill="#ffa726" font-family="Noto Sans KR">🟠 부하 93% 경고</text>
+        </g>
+        <!-- line from hydraulic to injection -->
+        <line x1="570" y1="400" x2="680" y2="340" stroke="#ffa726" stroke-width="1.5" stroke-dasharray="5 5"/>
+
+        <!-- ===== 보압 / 냉각 ===== -->
+        <g transform="translate(940,230)">
+          <rect class="node-box" x="0" y="0" width="180" height="140" style="stroke: #29b6f6;"/>
+          <circle cx="90" cy="38" r="16" fill="none" stroke="#29b6f6" stroke-width="2"/>
+          <text x="90" y="43" text-anchor="middle" font-size="14" fill="#29b6f6">⚡</text>
+          <text class="node-title" x="90" y="72" text-anchor="middle">보압 / 냉각</text>
+          <text class="node-value" x="90" y="95" text-anchor="middle">75 kW</text>
+          <text class="node-sub" x="90" y="112" text-anchor="middle">2,880 RPM | 42Hz</text>
+          <text x="90" y="130" text-anchor="middle" font-size="10" fill="#29b6f6" font-family="Noto Sans KR">🔵 DR 감발 중 (-28kW)</text>
+        </g>
+
+        <!-- ===== 제품 취출 ===== -->
+        <g transform="translate(1180,130)">
+          <rect class="node-box" x="0" y="0" width="120" height="100" style="stroke: #455a7a;"/>
+          <text class="node-title" x="60" y="25" text-anchor="middle">제품 취출</text>
+          <text class="node-value" x="60" y="52" text-anchor="middle">OK</text>
+          <text class="node-sub" x="60" y="72" text-anchor="middle">사이클 32s</text>
+          <text class="node-unit" x="60" y="88" text-anchor="middle">불량률 0.3%</text>
+        </g>
+
+        <!-- ===== 압출기 (별도 라인) ===== -->
+        <g transform="translate(30,380)">
+          <rect class="node-box" x="0" y="0" width="170" height="120" style="stroke: #66bb6a;"/>
+          <circle cx="85" cy="35" r="16" fill="none" stroke="#66bb6a" stroke-width="2"/>
+          <text x="85" y="40" text-anchor="middle" font-size="14" fill="#66bb6a">⚡</text>
+          <text class="node-title" x="85" y="68" text-anchor="middle">압출기 스크류</text>
+          <text class="node-value" x="85" y="90" text-anchor="middle">250 kW</text>
+          <text class="node-sub" x="85" y="107" text-anchor="middle">850 RPM | 58Hz</text>
+        </g>
+
+        <!-- DR 감발 총량 표시 -->
+        <g transform="translate(620,60)">
+          <rect x="0" y="0" width="200" height="50" rx="10" fill="rgba(255,167,38,0.12)" stroke="#ffa726" stroke-width="1"/>
+          <text x="100" y="20" text-anchor="middle" font-size="11" fill="#ffa726" font-weight="600" font-family="Noto Sans KR">DR 총 감발량</text>
+          <text x="100" y="42" text-anchor="middle" font-size="22" fill="#ffa726" font-weight="900" font-family="Noto Sans KR">186 kW</text>
+        </g>
+
+        <!-- 인버터 제어 신호 표시 -->
+        <g transform="translate(910,60)">
+          <rect x="0" y="0" width="180" height="50" rx="10" fill="rgba(41,182,246,0.12)" stroke="#29b6f6" stroke-width="1"/>
+          <text x="90" y="20" text-anchor="middle" font-size="11" fill="#29b6f6" font-weight="600" font-family="Noto Sans KR">AutoDR 신호</text>
+          <text x="90" y="42" text-anchor="middle" font-size="16" fill="#29b6f6" font-weight="700" font-family="Noto Sans KR">OpenADR 2.0b 연동</text>
+        </g>
+
+        <!-- Edge System 표시 -->
+        <g transform="translate(1130,400)">
+          <rect x="0" y="0" width="160" height="80" rx="8" fill="rgba(102,187,106,0.08)" stroke="#66bb6a" stroke-width="1"/>
+          <text x="80" y="22" text-anchor="middle" font-size="11" fill="#66bb6a" font-weight="600" font-family="Noto Sans KR">엣지 시스템</text>
+          <text x="80" y="42" text-anchor="middle" font-size="10" fill="#7a8bb5" font-family="Noto Sans KR">데이터 수집 주기: 1s</text>
+          <text x="80" y="58" text-anchor="middle" font-size="10" fill="#7a8bb5" font-family="Noto Sans KR">인버터 API 연동</text>
+          <text x="80" y="74" text-anchor="middle" font-size="10" fill="#66bb6a" font-family="Noto Sans KR">● 연결됨 (5/5)</text>
+        </g>
+        <!-- lines from edge to motors -->
+        <line x1="1130" y1="440" x2="1030" y2="370" stroke="rgba(102,187,106,0.3)" stroke-width="1" stroke-dasharray="3 3"/>
+        <line x1="1130" y1="440" x2="860" y2="370" stroke="rgba(102,187,106,0.3)" stroke-width="1" stroke-dasharray="3 3"/>
+
+      </svg>
+    </div>
+
+    <!-- Bottom Stats -->
+    <div class="bottom-stats">
+      <!-- Power Donut -->
+      <div class="bottom-panel">
+        <div class="panel-title">전력 수요 모니터</div>
+        <div class="donut-container">
+          <svg class="donut-svg" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="48" fill="none" stroke="#1a2744" stroke-width="14"/>
+            <!-- 사출 유닛: 185kW = 14.9% -->
+            <circle cx="60" cy="60" r="48" fill="none" stroke="#29b6f6" stroke-width="14"
+              stroke-dasharray="45 256" stroke-dashoffset="0" transform="rotate(-90 60 60)"/>
+            <!-- 형체: 320kW = 25.8% -->
+            <circle cx="60" cy="60" r="48" fill="none" stroke="#66bb6a" stroke-width="14"
+              stroke-dasharray="78 223" stroke-dashoffset="-45" transform="rotate(-90 60 60)"/>
+            <!-- 유압: 410kW = 33.1% -->
+            <circle cx="60" cy="60" r="48" fill="none" stroke="#ffa726" stroke-width="14"
+              stroke-dasharray="100 201" stroke-dashoffset="-123" transform="rotate(-90 60 60)"/>
+            <!-- 냉각: 75kW = 6% -->
+            <circle cx="60" cy="60" r="48" fill="none" stroke="#7e57c2" stroke-width="14"
+              stroke-dasharray="18 283" stroke-dashoffset="-223" transform="rotate(-90 60 60)"/>
+            <!-- 압출기: 250kW = 20.2% -->
+            <circle cx="60" cy="60" r="48" fill="none" stroke="#ef5350" stroke-width="14"
+              stroke-dasharray="61 240" stroke-dashoffset="-241" transform="rotate(-90 60 60)"/>
+            <!-- Center text -->
+            <text x="60" y="55" text-anchor="middle" font-size="18" font-weight="900" fill="#e0e6f0" font-family="Noto Sans KR">1,240</text>
+            <text x="60" y="72" text-anchor="middle" font-size="10" fill="#7a8bb5" font-family="Noto Sans KR">kW</text>
+          </svg>
+          <div class="donut-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#29b6f6"></div><span>사출 유닛 185kW</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#66bb6a"></div><span>형체 구동 320kW</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#ffa726"></div><span>유압 펌프 410kW</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#7e57c2"></div><span>냉각 펌프 75kW</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#ef5350"></div><span>압출기 250kW</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Process Detail Table -->
+      <div class="bottom-panel">
+        <div class="panel-title">공정별 세부 상태</div>
+        <table class="process-table">
+          <thead>
+            <tr>
+              <th>공정</th>
+              <th>전력(kW)</th>
+              <th>RPM</th>
+              <th>인버터(Hz)</th>
+              <th>온도(°C)</th>
+              <th>상태</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>사출 유닛</td>
+              <td>185</td>
+              <td>1,420</td>
+              <td>48</td>
+              <td>62</td>
+              <td><span class="td-status blue"></span>DR</td>
+            </tr>
+            <tr>
+              <td>형체 구동</td>
+              <td>320</td>
+              <td>1,780</td>
+              <td>60</td>
+              <td>58</td>
+              <td><span class="td-status green"></span>정상</td>
+            </tr>
+            <tr>
+              <td>유압 펌프</td>
+              <td>410</td>
+              <td>1,180</td>
+              <td>55</td>
+              <td>74</td>
+              <td><span class="td-status orange"></span>경고</td>
+            </tr>
+            <tr>
+              <td>냉각 펌프</td>
+              <td>75</td>
+              <td>2,880</td>
+              <td>42</td>
+              <td>45</td>
+              <td><span class="td-status blue"></span>DR</td>
+            </tr>
+            <tr>
+              <td>압출기</td>
+              <td>250</td>
+              <td>850</td>
+              <td>58</td>
+              <td>56</td>
+              <td><span class="td-status green"></span>정상</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Time Chart -->
+      <div class="bottom-panel">
+        <div class="panel-title">시간대별 전력 / DR 절감</div>
+        <div class="time-chart">
+          <div class="time-bar-group"><div class="time-bars-stack"><div class="time-bar baseline" style="height:80px;width:100%"></div><div class="time-bar dr-save" style="height:0px;width:100%"></div></div><div class="time-label">06</div></div>
+          <div class="time-bar-group"><div class="time-bars-stack"><div class="time-bar baseline" style="height:95px;width:100%"></div><div class="time-bar dr-save" style="height:0px;width:100%"></div></div><div class="time-label">07</div></div>
+          <div class="time-bar-group"><div class="time-bars-stack"><div class="time-bar consumption" style="height:100px;width:100%"></div><div class="time-bar dr-save" style="height:10px;width:100%"></div></div><div class="time-label">08</div></div>
+          <div class="time-bar-group"><div class="time-bars-stack"><div class="time-bar consumption" style="height:110px;width:100%"></div><div class="time-bar dr-save" style="height:15px;width:100%"></div></div><div class="time-label">09</div></div>
+          <div class="time-bar-group"><div class="time-bars-stack"><div class="time-bar consumption" style="height:105px;width:100%"></div><div class="time-bar dr-save" style="height:20px;width:100%"></div></div><div class="time-label">10</div></div>
+          <div class="time-bar-group"><div class="time-bars-stack"><div class="time-bar consumption" style="height:112px;width:100%"></div><div class="time-bar dr-save" style="height:22px;width:100%"></div></div><div class="time-label">11</div></div>
+          <div class="time-bar-group"><div class="time-bars-stack"><div class="time-bar consumption" style="height:90px;width:100%"></div><div class="time-bar dr-save" style="height:8px;width:100%"></div></div><div class="time-label">12</div></div>
+          <div class="time-bar-group"><div class="time-bars-stack"><div class="time-bar consumption" style="height:115px;width:100%"></div><div class="time-bar dr-save" style="height:25px;width:100%"></div></div><div class="time-label">13</div></div>
+          <div class="time-bar-group"><div class="time-bars-stack"><div class="time-bar consumption" style="height:108px;width:100%"></div><div class="time-bar dr-save" style="height:18px;width:100%"></div></div><div class="time-label">14</div></div>
+          <div class="time-bar-group"><div class="time-bars-stack"><div class="time-bar consumption" style="height:100px;width:100%"></div><div class="time-bar dr-save" style="height:15px;width:100%"></div></div><div class="time-label">15</div></div>
+          <div class="time-bar-group"><div class="time-bars-stack"><div class="time-bar consumption" style="height:95px;width:100%"></div><div class="time-bar dr-save" style="height:12px;width:100%"></div></div><div class="time-label">16</div></div>
+          <div class="time-bar-group"><div class="time-bars-stack"><div class="time-bar baseline" style="height:75px;width:100%"></div><div class="time-bar dr-save" style="height:0px;width:100%"></div></div><div class="time-label">17</div></div>
+        </div>
+        <div style="display:flex;gap:14px;font-size:9px;color:#7a8bb5;margin-top:-14px;">
+          <span><span style="display:inline-block;width:10px;height:6px;background:#ffa726;border-radius:1px;margin-right:3px;"></span>소비전력</span>
+          <span><span style="display:inline-block;width:10px;height:6px;background:#29b6f6;border-radius:1px;margin-right:3px;"></span>DR 절감</span>
+          <span><span style="display:inline-block;width:10px;height:6px;background:#455a7a;border-radius:1px;margin-right:3px;"></span>비DR 시간</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+
+    <!-- AI Prediction -->
+    <div>
+      <div class="panel-title">AI 전력 사용량 예측</div>
+      <div class="ai-chart">
+        <svg viewBox="0 0 290 110">
+          <!-- Grid -->
+          <line x1="30" y1="10" x2="30" y2="90" stroke="#1a2744" stroke-width="0.5"/>
+          <line x1="30" y1="90" x2="285" y2="90" stroke="#1a2744" stroke-width="0.5"/>
+          <line x1="30" y1="50" x2="285" y2="50" stroke="#1a2744" stroke-width="0.5" stroke-dasharray="3"/>
+          <line x1="30" y1="30" x2="285" y2="30" stroke="#1a2744" stroke-width="0.5" stroke-dasharray="3"/>
+          <line x1="30" y1="70" x2="285" y2="70" stroke="#1a2744" stroke-width="0.5" stroke-dasharray="3"/>
+          <!-- Y labels -->
+          <text x="26" y="14" text-anchor="end" font-size="8" fill="#556b8a">1400</text>
+          <text x="26" y="34" text-anchor="end" font-size="8" fill="#556b8a">1200</text>
+          <text x="26" y="54" text-anchor="end" font-size="8" fill="#556b8a">1000</text>
+          <text x="26" y="74" text-anchor="end" font-size="8" fill="#556b8a">800</text>
+          <text x="26" y="94" text-anchor="end" font-size="8" fill="#556b8a">600</text>
+          <!-- Actual line -->
+          <polyline points="30,55 55,48 80,52 105,42 130,38 155,44 180,40" fill="none" stroke="#4fc3f7" stroke-width="2"/>
+          <!-- Predicted line (dashed) -->
+          <polyline points="180,40 205,36 230,42 255,38 280,35" fill="none" stroke="#ffa726" stroke-width="2" stroke-dasharray="5 3"/>
+          <!-- Area under actual -->
+          <polygon points="30,55 55,48 80,52 105,42 130,38 155,44 180,40 180,90 30,90" fill="url(#blueGrad)" opacity="0.3"/>
+          <!-- Current time marker -->
+          <line x1="180" y1="10" x2="180" y2="90" stroke="#ef5350" stroke-width="1" stroke-dasharray="3"/>
+          <text x="180" y="104" text-anchor="middle" font-size="8" fill="#ef5350">현재</text>
+          <!-- Legend -->
+          <text x="40" y="104" font-size="8" fill="#4fc3f7">— 실제</text>
+          <text x="80" y="104" font-size="8" fill="#ffa726">--- AI 예측</text>
+          <defs>
+            <linearGradient id="blueGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#4fc3f7" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#4fc3f7" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+    </div>
+
+    <!-- DR Operation Status -->
+    <div class="dr-status-card">
+      <div class="panel-title" style="border:none;padding:0;margin-bottom:8px;">DR 운영 상태</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+        <div>
+          <div style="font-size:10px;color:#7a8bb5;">현재 감발량</div>
+          <div class="dr-big-number">186 <span style="font-size:16px;">kW</span></div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:10px;color:#7a8bb5;">감발 목표</div>
+          <div style="font-size:22px;font-weight:700;color:#ffa726;">280 kW</div>
+        </div>
+      </div>
+      <div class="dr-progress-bar"><div class="dr-progress-fill"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:#556b8a;margin-top:4px;">
+        <span>달성률 66.4%</span>
+        <span>잔여 94 kW</span>
+      </div>
+      <div class="dr-target-row">
+        <div><span class="dr-target-label">AGC 응답</span></div>
+        <div><span style="color:#66bb6a;font-size:13px;font-weight:700;">18초</span><span style="font-size:10px;color:#556b8a;"> / 목표 30초</span></div>
+      </div>
+    </div>
+
+    <!-- Inverter Control -->
+    <div>
+      <div class="panel-title">인버터 제어 현황</div>
+      <div class="inverter-grid">
+        <div class="inverter-card">
+          <div class="inv-label">사출 유닛</div>
+          <div class="inv-value" style="color:#29b6f6;">48<span class="inv-unit"> Hz</span></div>
+          <div style="font-size:8px;color:#556b8a;">기본 60Hz → 감발</div>
+        </div>
+        <div class="inverter-card">
+          <div class="inv-label">형체 구동</div>
+          <div class="inv-value" style="color:#66bb6a;">60<span class="inv-unit"> Hz</span></div>
+          <div style="font-size:8px;color:#556b8a;">정상 운전 유지</div>
+        </div>
+        <div class="inverter-card">
+          <div class="inv-label">유압 펌프</div>
+          <div class="inv-value" style="color:#ffa726;">55<span class="inv-unit"> Hz</span></div>
+          <div style="font-size:8px;color:#ef5350;">부하 경고 ⚠</div>
+        </div>
+        <div class="inverter-card">
+          <div class="inv-label">냉각 펌프</div>
+          <div class="inv-value" style="color:#29b6f6;">42<span class="inv-unit"> Hz</span></div>
+          <div style="font-size:8px;color:#556b8a;">기본 60Hz → 감발</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OpenADR Events -->
+    <div>
+      <div class="panel-title">OpenADR 이벤트</div>
+      <div class="adr-timeline">
+        <div class="adr-event active">
+          <span class="adr-time">13:00</span>
+          <span class="adr-desc">DR 감발 이벤트 진행 중 (280kW)</span>
+        </div>
+        <div class="adr-event scheduled">
+          <span class="adr-time">15:00</span>
+          <span class="adr-desc">예정: 피크 대응 감발 (150kW)</span>
+        </div>
+        <div class="adr-event completed">
+          <span class="adr-time">10:00</span>
+          <span class="adr-desc">완료: 오전 감발 (200kW 달성)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quality Monitor -->
+    <div>
+      <div class="panel-title">공정 품질 모니터</div>
+      <div class="quality-grid">
+        <div class="quality-item">
+          <div class="q-val">0.3%</div>
+          <div class="q-label">불량률</div>
+        </div>
+        <div class="quality-item">
+          <div class="q-val">±0.02</div>
+          <div class="q-label">중량편차(g)</div>
+        </div>
+        <div class="quality-item">
+          <div class="q-val" style="color:#4fc3f7;">32s</div>
+          <div class="q-label">사이클타임</div>
+        </div>
+      </div>
+      <div style="margin-top:6px;font-size:9px;color:#66bb6a;text-align:center;">✅ DR 감발 중 품질 기준 충족</div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
