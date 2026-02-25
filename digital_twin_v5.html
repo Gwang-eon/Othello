@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>제조공정 전동설비 탄력 적응형 DR 디지털 트윈</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Noto Sans KR',sans-serif;background:#060a14;color:#e0e6f0;width:1920px;height:1080px;overflow:hidden;user-select:none;font-size:13px;}
+.cb{color:#38bdf8}.cg{color:#4ade80}.co{color:#fb923c}.cr{color:#f87171}.cp{color:#a78bfa}
+
+/* === HEADER 52px === */
+.hd{display:flex;align-items:center;justify-content:space-between;height:52px;padding:0 20px;background:linear-gradient(90deg,#080d1c,#0c1530,#080d1c);border-bottom:1px solid #14264a;}
+.hd-t{font-size:17px;font-weight:900;letter-spacing:1.5px;background:linear-gradient(90deg,#38bdf8,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hd-s{display:flex;gap:20px;align-items:center;}
+.hs{text-align:center}.hs .l{font-size:12px;color:#5b6b8a;letter-spacing:.5px}.hs .v{font-size:16px;font-weight:800}.hs .u{font-size:12px;color:#5b6b8a}
+.dr-live{display:flex;align-items:center;gap:6px;background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.3);border-radius:14px;padding:4px 12px;font-size:12px;font-weight:700;color:#fb923c}
+.dr-live .dot{width:7px;height:7px;background:#fb923c;border-radius:50%;animation:p 1.5s infinite}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* === BODY 3-col === */
+.bd{display:grid;grid-template-columns:280px 1fr 320px;grid-template-rows:1fr 40px;height:calc(1080px - 52px);}
+
+/* === LEFT PANEL === */
+.lp{grid-row:1;background:#080d1c;border-right:1px solid #14264a;padding:10px;display:flex;flex-direction:column;gap:6px;overflow:hidden;}
+.pt{font-size:13px;font-weight:700;color:#38bdf8;padding-bottom:4px;border-bottom:1px solid #14264a;display:flex;align-items:center;gap:5px;letter-spacing:.5px;flex-shrink:0}
+.pt::before{content:'';width:3px;height:12px;background:#38bdf8;border-radius:2px}
+
+/* Motor List */
+.ml{flex-shrink:0}
+.mi{display:grid;grid-template-columns:32px 1fr 60px 14px;align-items:center;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:13px;transition:background .15s;gap:4px}
+.mi:hover{background:rgba(56,189,248,0.06)}
+.mi.sel{background:rgba(56,189,248,0.1);border-left:2px solid #38bdf8}
+.mi.dr-row{background:rgba(251,146,60,0.04)}
+.mi .mid{font-weight:700;color:#818cf8;font-size:12px}.mi .mn{color:#b0c4de;font-size:12px}.mi .mp{font-weight:700;font-size:13px}.mi .ms{width:8px;height:8px;border-radius:50%;display:inline-block}
+.ms-g{background:#4ade80}.ms-b{background:#38bdf8}.ms-o{background:#fb923c}
+
+/* DR Box */
+.dr-box{background:rgba(10,16,32,0.9);border:1px solid #1a2d55;border-radius:8px;padding:10px;flex-shrink:0}
+.dr-row{display:flex;justify-content:space-between;align-items:flex-end}
+.dr-n{font-size:28px;font-weight:900;color:#fb923c;line-height:1}
+.dr-bar{height:6px;background:#1a2744;border-radius:3px;overflow:hidden;margin-top:5px}
+.dr-bf{height:100%;background:linear-gradient(90deg,#fb923c,#f97316);border-radius:3px}
+.dr-st{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px}
+.ds{text-align:center;padding:5px;background:rgba(14,20,40,0.8);border-radius:5px;border:1px solid #1a2d55}
+.ds .dv{font-size:15px;font-weight:800}.ds .dl{font-size:12px;color:#5b6b8a;margin-top:1px}
+
+/* Quality */
+.qg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;flex-shrink:0}
+.qi{text-align:center;padding:5px;background:rgba(10,16,32,0.8);border-radius:5px;border:1px solid #1a2d55}
+.qi .qv{font-size:14px;font-weight:800}.qi .ql{font-size:12px;color:#5b6b8a}
+
+/* Time Chart — compact */
+.tc-wrap{flex:1;min-height:0;display:flex;flex-direction:column}
+.tc{display:flex;align-items:flex-end;gap:3px;flex:1;min-height:0;padding-bottom:16px;position:relative}
+.tc-bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.tc-f{width:100%;border-radius:2px 2px 0 0;min-height:1px}
+.tc-l{font-size:12px;color:#5b6b8a;position:absolute;bottom:0}
+.tc-lg{display:flex;gap:10px;font-size:12px;color:#5b6b8a;flex-shrink:0;margin-top:3px}
+.tc-lg span::before{content:'';display:inline-block;width:8px;height:4px;border-radius:1px;margin-right:3px;vertical-align:middle}
+.lg-c::before{background:#f97316}.lg-d::before{background:#38bdf8}.lg-b::before{background:#37474f}
+
+/* === CENTER === */
+.ct{grid-row:1;position:relative;overflow:hidden;background:#080d1c}
+.ct-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(56,189,248,0.012) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,0.012) 1px,transparent 1px);background-size:50px 50px;pointer-events:none;z-index:1}
+.ct-bg{position:absolute;inset:0;z-index:0;display:flex;align-items:center;justify-content:center}
+.ct-bg img{width:100%;height:auto;object-fit:contain;opacity:.5}
+.ct-hint{font-size:14px;color:#1e2d4a;text-align:center;pointer-events:none}
+.ct-hint span{font-size:40px;display:block;margin-bottom:6px;opacity:.3}
+.conn-svg{position:absolute;inset:0;z-index:2;pointer-events:none}
+.conn-line{stroke-dasharray:6 5;animation:fl .9s linear infinite}
+@keyframes fl{from{stroke-dashoffset:11}to{stroke-dashoffset:0}}
+
+/* Node */
+.nd{position:absolute;z-index:10;cursor:grab;transition:box-shadow .15s}
+.nd:active{cursor:grabbing}
+.nd.sel{z-index:20}
+.nc{background:rgba(8,13,28,0.88);border:1.5px solid #1a3a6a;border-radius:8px;padding:8px 12px;backdrop-filter:blur(8px);min-width:155px}
+.nc::before{content:'';position:absolute;top:0;left:16px;right:16px;height:2px;border-radius:1px}
+.nc.st-n::before{background:linear-gradient(90deg,transparent,#4ade80,transparent)}
+.nc.st-d::before{background:linear-gradient(90deg,transparent,#fb923c,transparent)}
+.nd.sel .nc{border-color:#60a5fa;box-shadow:0 0 20px rgba(96,165,250,0.25)}
+.nc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+.nc-sn{font-size:12px;font-weight:700;padding:2px 6px;border-radius:5px}
+.sn1{background:rgba(56,189,248,0.1);color:#38bdf8}.sn2{background:rgba(168,85,247,0.1);color:#a855f7}.sn3{background:rgba(74,222,128,0.1);color:#4ade80}.sn4{background:rgba(251,146,60,0.1);color:#fb923c}.sn5{background:rgba(56,189,248,0.1);color:#38bdf8}.sn6{background:rgba(244,114,182,0.1);color:#f472b6}.sn7{background:rgba(74,222,128,0.1);color:#4ade80}.sn8{background:rgba(96,165,250,0.1);color:#60a5fa}
+.nc-bd{font-size:12px;padding:2px 6px;border-radius:4px;font-weight:600}
+.bd-n{background:rgba(74,222,128,0.1);color:#4ade80;border:1px solid rgba(74,222,128,0.2)}
+.bd-d{background:rgba(251,146,60,0.1);color:#fb923c;border:1px solid rgba(251,146,60,0.2)}
+.bd-s{background:rgba(248,113,113,0.1);color:#f87171;border:1px solid rgba(248,113,113,0.2)}
+.nc-nm{font-size:13px;font-weight:800;color:#f0f4f8;line-height:1.2}
+.nc-pw{font-size:14px;font-weight:700;margin:3px 0;display:flex;align-items:center;gap:4px}
+.nc-info{font-size:12px;color:#7a8bb5}
+.nc-bar{height:4px;background:#1a2744;border-radius:2px;margin-top:4px;overflow:hidden}
+.nc-bf{height:100%;border-radius:2px}
+.nc-bf.gr{background:linear-gradient(90deg,#4ade80,#86efac)}.nc-bf.or{background:linear-gradient(90deg,#fb923c,#fdba74)}.nc-bf.bl{background:linear-gradient(90deg,#38bdf8,#60a5fa)}
+.nc-dr{font-size:12px;color:#fb923c;font-weight:700;margin-top:3px}
+
+/* Special nodes */
+.nd-sp{position:absolute;z-index:8;cursor:grab}
+.nd-sp:active{cursor:grabbing}
+.sp-box{border-radius:8px;padding:10px 14px;backdrop-filter:blur(8px)}
+
+/* AI Stat node */
+.ai-stat{background:rgba(56,189,248,0.05);border:1.5px solid rgba(56,189,248,0.25);border-radius:8px;padding:12px 16px;backdrop-filter:blur(8px)}
+.ai-stat .ai-title{font-size:14px;font-weight:700;color:#38bdf8;margin-bottom:6px}
+.ai-stat .ai-big{font-size:32px;font-weight:900;color:#38bdf8;line-height:1}
+.ai-stat .ai-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:8px}
+.ai-stat .ai-cell{text-align:center;padding:4px;background:rgba(14,20,40,0.8);border-radius:4px;border:1px solid #1a2d55}
+.ai-stat .ai-cv{font-size:13px;font-weight:700}.ai-stat .ai-cl{font-size:11px;color:#5b6b8a}
+
+/* === RIGHT PANEL === */
+.rp{grid-row:1;background:#080d1c;border-left:1px solid #14264a;padding:10px;display:flex;flex-direction:column;gap:6px;overflow-y:auto}
+.rp::-webkit-scrollbar{width:3px}.rp::-webkit-scrollbar-thumb{background:#1a2d55;border-radius:2px}
+
+/* Control */
+.ctrl{background:rgba(10,16,32,0.95);border:1px solid #1a3a6a;border-radius:8px;padding:12px;flex-shrink:0}
+.ctrl-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.ctrl-nm{font-size:15px;font-weight:800}.ctrl-sub{font-size:12px;color:#5b6b8a;margin-top:1px}
+.ctrl-motor{font-size:12px;font-weight:700;color:#818cf8;margin-bottom:8px}
+.cv3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:8px}
+.cv{text-align:center;padding:6px;background:rgba(14,20,40,0.8);border-radius:5px;border:1px solid #1a2d55}
+.cv .cvv{font-size:16px;font-weight:800}.cv .cvl{font-size:12px;color:#5b6b8a;margin-top:2px}
+
+/* Sliders */
+.sg{margin-bottom:6px}
+.sl{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.sl .sk{color:#5b6b8a}.sl .sv{font-weight:700}
+input[type=range]{-webkit-appearance:none;width:100%;height:5px;background:#1a2744;border-radius:2px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;cursor:pointer;border:2px solid}
+.sr-b::-webkit-slider-thumb{background:#38bdf8;border-color:#60a5fa}
+.sr-g::-webkit-slider-thumb{background:#4ade80;border-color:#86efac}
+.sr-o::-webkit-slider-thumb{background:#fb923c;border-color:#fdba74}
+.st{display:flex;justify-content:space-between;font-size:12px;color:#3d4f6f;margin-top:2px}
+
+/* Buttons */
+.cb4{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
+.cbtn{padding:7px;border-radius:5px;border:1px solid;font-size:13px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s}
+.cbtn:hover{transform:scale(1.02)}
+.cbtn-d{background:rgba(251,146,60,0.06);border-color:rgba(251,146,60,0.25);color:#fb923c}
+.cbtn-n{background:rgba(74,222,128,0.06);border-color:rgba(74,222,128,0.25);color:#4ade80}
+.cbtn-s{background:rgba(248,113,113,0.06);border-color:rgba(248,113,113,0.25);color:#f87171}
+.cbtn-a{background:rgba(56,189,248,0.06);border-color:rgba(56,189,248,0.25);color:#38bdf8}
+.cbtn-p{background:rgba(167,139,250,0.06);border-color:rgba(167,139,250,0.25);color:#a78bfa}
+
+/* Detail */
+.dtl{font-size:13px}
+.dtl-row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(20,38,74,0.3)}
+.dtl-row .dk{color:#5b6b8a}.dtl-row .dv{font-weight:600;color:#b0c4de}
+
+/* ADR */
+.adr{display:flex;align-items:center;gap:6px;padding:4px 8px;background:rgba(12,18,38,0.5);border-radius:4px;border-left:2px solid;font-size:12px;margin-bottom:3px}
+.adr.ac{border-left-color:#fb923c;background:rgba(251,146,60,0.04)}.adr.sc{border-left-color:#38bdf8}.adr.dn{border-left-color:#4ade80}.adr.ai{border-left-color:#a78bfa;background:rgba(167,139,250,0.04)}
+.adr-t{font-weight:700;color:#b0c4de;min-width:38px}.adr-d{color:#5b6b8a}
+
+/* Sys */
+.syg{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.syc{background:rgba(12,18,38,0.7);border:1px solid #1a2d55;border-radius:5px;padding:6px}
+.syc .syt{font-size:13px;font-weight:700;margin-bottom:3px}
+.syc .syr{display:flex;justify-content:space-between;font-size:12px;padding:2px 0}
+.syc .syr .k{color:#5b6b8a}.syc .syr .v{font-weight:600}
+
+/* AI Model Settings */
+.ai-set{background:rgba(10,16,32,0.9);border:1px solid #1a2d55;border-radius:8px;padding:10px;flex-shrink:0}
+.ai-set .as-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid rgba(20,38,74,0.3)}
+.ai-set .as-row .ak{color:#5b6b8a}.ai-set .as-row .av{font-weight:600}
+
+/* BG Btn */
+.bg-btn{display:block;padding:7px;border-radius:5px;border:1px solid rgba(56,189,248,0.25);background:rgba(56,189,248,0.06);color:#38bdf8;font-size:13px;font-weight:700;cursor:pointer;text-align:center;margin-top:4px}
+
+/* === BOTTOM BAR 40px === */
+.bb{grid-column:1/4;grid-row:2;height:40px;background:#080d1c;border-top:1px solid #14264a;display:flex;align-items:center;padding:0 16px;gap:14px;overflow:hidden}
+.bb-i{font-size:13px;color:#5b6b8a;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.bb-v{font-weight:700}.bb-s{width:1px;height:20px;background:#14264a;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hd">
+  <div class="hd-t">제조공정 전동설비 탄력 적응형 DR 디지털 트윈</div>
+  <div class="hd-s">
+    <div class="hs"><div class="l">총 전력</div><div class="v cb">1,769<span class="u"> kW</span></div></div>
+    <div class="hs"><div class="l">DR 감발</div><div class="v co">426<span class="u"> kW</span></div></div>
+    <div class="hs"><div class="l">공정효율</div><div class="v cg">91.2<span class="u"> %</span></div></div>
+    <div class="hs"><div class="l">모터</div><div class="v cp">6<span class="u">정상</span> 2<span class="u">DR</span></div></div>
+    <div class="dr-live"><div class="dot"></div>실시간 연동 중</div>
+    <div style="font-size:13px;color:#5b6b8a" id="clock"></div>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="bd">
+
+<!-- ===== LEFT PANEL ===== -->
+<div class="lp">
+  <div class="pt">전동설비 8대 상태</div>
+  <div class="ml" id="motorList">
+    <div class="mi sel" data-m="1" onclick="sel(1)"><span class="mid">M1</span><span class="mn">호퍼투입/건조</span><span class="mp cb">45kW</span><span class="ms ms-g"></span></div>
+    <div class="mi" data-m="2" onclick="sel(2)"><span class="mid">M2</span><span class="mn">배럴히터5구간</span><span class="mp cb">155kW</span><span class="ms ms-g"></span></div>
+    <div class="mi" data-m="3" onclick="sel(3)"><span class="mid">M3</span><span class="mn">압출기주구동</span><span class="mp cb">350kW</span><span class="ms ms-g"></span></div>
+    <div class="mi dr-row" data-m="4" onclick="sel(4)"><span class="mid">M4</span><span class="mn">VFD사출스크류</span><span class="mp co">210kW</span><span class="ms ms-o"></span></div>
+    <div class="mi" data-m="5" onclick="sel(5)"><span class="mid">M5</span><span class="mn">주전동기메인</span><span class="mp cb">520kW</span><span class="ms ms-g"></span></div>
+    <div class="mi" data-m="6" onclick="sel(6)"><span class="mid">M6</span><span class="mn">형체클램핑</span><span class="mp cb">380kW</span><span class="ms ms-g"></span></div>
+    <div class="mi dr-row" data-m="7" onclick="sel(7)"><span class="mid">M7</span><span class="mn">냉각수순환펌프</span><span class="mp co">94kW</span><span class="ms ms-o"></span></div>
+    <div class="mi" data-m="8" onclick="sel(8)"><span class="mid">M8</span><span class="mn">풀러/인취기</span><span class="mp cb">15kW</span><span class="ms ms-g"></span></div>
+  </div>
+
+  <div class="pt">DR 운영 요약</div>
+  <div class="dr-box">
+    <div class="dr-row">
+      <div><div style="font-size:12px;color:#5b6b8a">현재 감발</div><div class="dr-n">426<span style="font-size:14px"> kW</span></div></div>
+      <div style="text-align:right"><div style="font-size:12px;color:#5b6b8a">목표</div><div style="font-size:20px;font-weight:800;color:#38bdf8">600 kW</div></div>
+    </div>
+    <div class="dr-bar"><div class="dr-bf" style="width:71%"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#5b6b8a;margin-top:3px"><span>달성 71%</span><span>잔여 174kW</span></div>
+    <div class="dr-st">
+      <div class="ds"><div class="dv cg">18초</div><div class="dl">AGC 응답</div></div>
+      <div class="ds"><div class="dv cp">98.76%</div><div class="dl">ROM 정확도</div></div>
+    </div>
+  </div>
+
+  <div class="pt">공정 품질</div>
+  <div class="qg">
+    <div class="qi"><div class="qv cg">0.28%</div><div class="ql">불량률</div></div>
+    <div class="qi"><div class="qv cb">±0.15</div><div class="ql">중량편차g</div></div>
+    <div class="qi"><div class="qv cp">38s</div><div class="ql">사이클</div></div>
+  </div>
+
+  <div class="pt">시간대별 전력</div>
+  <div class="tc-wrap">
+    <div class="tc">
+      <div class="tc-bar"><div class="tc-f" style="height:40%;background:#37474f"></div><div class="tc-l">06</div></div>
+      <div class="tc-bar"><div class="tc-f" style="height:50%;background:#37474f"></div><div class="tc-l">07</div></div>
+      <div class="tc-bar"><div class="tc-f" style="height:65%;background:#f97316"></div><div class="tc-l">08</div></div>
+      <div class="tc-bar"><div class="tc-f" style="height:72%;background:#f97316"></div><div class="tc-l">09</div></div>
+      <div class="tc-bar"><div class="tc-f" style="height:78%;background:#f97316"></div><div class="tc-l">10</div></div>
+      <div class="tc-bar"><div class="tc-f" style="height:70%;background:#f97316"></div><div class="tc-l">11</div></div>
+      <div class="tc-bar"><div class="tc-f" style="height:58%;background:#f97316"></div><div class="tc-l">12</div></div>
+      <div class="tc-bar"><div class="tc-f" style="height:82%;background:#fb923c;border:1px solid #fb923c"></div><div class="tc-l" style="color:#fb923c;font-weight:700">13</div></div>
+      <div class="tc-bar"><div class="tc-f" style="height:62%;background:#1a2744;opacity:.5"></div><div class="tc-l">14</div></div>
+      <div class="tc-bar"><div class="tc-f" style="height:58%;background:#1a2744;opacity:.5"></div><div class="tc-l">15</div></div>
+      <div class="tc-bar"><div class="tc-f" style="height:50%;background:#1a2744;opacity:.5"></div><div class="tc-l">16</div></div>
+      <div class="tc-bar"><div class="tc-f" style="height:38%;background:#1a2744;opacity:.5"></div><div class="tc-l">17</div></div>
+    </div>
+    <div class="tc-lg"><span class="lg-c">소비</span><span class="lg-d">DR절감</span><span class="lg-b">예측</span></div>
+  </div>
+</div>
+
+<!-- ===== CENTER ===== -->
+<div class="ct" id="center">
+  <div class="ct-bg" id="bgLayer"><div class="ct-hint"><span>🏭</span>3D 공정 이미지를 배경으로 설정<br><span style="font-size:13px;color:#14264a">우측 하단 [배경 불러오기] 사용 · 노드 드래그로 배치</span></div></div>
+  <div class="ct-grid"></div>
+  <svg class="conn-svg" id="connSvg"></svg>
+
+  <!-- NODES -->
+  <div class="nd sel" id="nd1" data-s="1" style="left:30px;top:30px"><div class="nc st-n"><div class="nc-top"><span class="nc-sn sn1">S1</span><span class="nc-bd bd-n">정상</span></div><div class="nc-nm">원재료·호퍼</div><div class="nc-pw cb">⚡ 45 kW</div><div class="nc-info">50Hz | 1,450 RPM</div><div class="nc-bar"><div class="nc-bf gr" style="width:82%"></div></div></div></div>
+
+  <div class="nd" id="nd2" data-s="2" style="left:220px;top:30px"><div class="nc st-n"><div class="nc-top"><span class="nc-sn sn2">S2</span><span class="nc-bd bd-n">정상</span></div><div class="nc-nm">가열존 (배럴히터)</div><div class="nc-pw cb">⚡ 155 kW</div><div class="nc-info">165~240°C | 5구간</div><div class="nc-bar"><div class="nc-bf bl" style="width:75%"></div></div></div></div>
+
+  <div class="nd" id="nd3" data-s="3" style="left:410px;top:30px"><div class="nc st-n"><div class="nc-top"><span class="nc-sn sn3">S3</span><span class="nc-bd bd-n">정상</span></div><div class="nc-nm">압출배럴·스크류</div><div class="nc-pw cb">⚡ 350 kW</div><div class="nc-info">42Hz | 85 RPM</div><div class="nc-bar"><div class="nc-bf gr" style="width:88%"></div></div></div></div>
+
+  <div class="nd" id="nd4" data-s="4" style="left:600px;top:30px"><div class="nc st-d"><div class="nc-top"><span class="nc-sn sn4">S4</span><span class="nc-bd bd-d">DR</span></div><div class="nc-nm">VFD 사출유닛</div><div class="nc-pw co">⚡ 210 kW</div><div class="nc-info">38Hz | 250 RPM</div><div class="nc-bar"><div class="nc-bf or" style="width:75%"></div></div><div class="nc-dr">▼ -70 kW 감발</div></div></div>
+
+  <div class="nd" id="nd5" data-s="5" style="left:600px;top:280px"><div class="nc st-n"><div class="nc-top"><span class="nc-sn sn5">S5</span><span class="nc-bd bd-n">정상</span></div><div class="nc-nm">금형·주전동기</div><div class="nc-pw cb">⚡ 520 kW</div><div class="nc-info">55Hz | 1,780 RPM</div><div class="nc-bar"><div class="nc-bf gr" style="width:95%"></div></div></div></div>
+
+  <div class="nd" id="nd6" data-s="6" style="left:410px;top:300px"><div class="nc st-n"><div class="nc-top"><span class="nc-sn sn6">S6</span><span class="nc-bd bd-n">정상</span></div><div class="nc-nm">클램핑 유닛</div><div class="nc-pw cb">⚡ 380 kW</div><div class="nc-info">50Hz | 1,450 RPM</div><div class="nc-bar"><div class="nc-bf gr" style="width:85%"></div></div></div></div>
+
+  <div class="nd" id="nd7" data-s="7" style="left:220px;top:280px"><div class="nc st-d"><div class="nc-top"><span class="nc-sn sn7">S7</span><span class="nc-bd bd-d">DR</span></div><div class="nc-nm">냉각조 (쿨링)</div><div class="nc-pw co">⚡ 94 kW</div><div class="nc-info">40Hz | 2,900 RPM</div><div class="nc-bar"><div class="nc-bf or" style="width:60%"></div></div><div class="nc-dr">▼ -56 kW 감발</div></div></div>
+
+  <div class="nd" id="nd8" data-s="8" style="left:30px;top:300px"><div class="nc st-n"><div class="nc-top"><span class="nc-sn sn8">S8</span><span class="nc-bd bd-n">정상</span></div><div class="nc-nm">풀러·다이헤드</div><div class="nc-pw cb">⚡ 15 kW</div><div class="nc-info">48Hz | 1,450 RPM</div><div class="nc-bar"><div class="nc-bf gr" style="width:68%"></div></div></div></div>
+
+  <!-- Special: DR Total -->
+  <div class="nd-sp" id="ndDR" style="left:790px;top:30px"><div class="sp-box" style="background:rgba(251,146,60,0.08);border:1.5px solid rgba(251,146,60,0.3);text-align:center"><div style="font-size:13px;color:#fb923c;font-weight:600">DR 총 감발량</div><div style="font-size:30px;font-weight:900;color:#fb923c;line-height:1">426 <span style="font-size:14px">kW</span></div><div style="font-size:12px;color:#5b6b8a;margin-top:3px">M4:-70 · M7:-56 · 대기:-300</div></div></div>
+
+  <!-- Special: AI Algorithm Status -->
+  <div class="nd-sp" id="ndAI" style="left:790px;top:150px"><div class="ai-stat"><div class="ai-title">AI 알고리즘 상태</div><div style="font-size:12px;color:#5b6b8a;margin-bottom:2px">ROM 부하 예측 정확도</div><div class="ai-big">98.76<span style="font-size:14px;color:#5b6b8a">%</span></div><div style="display:flex;gap:12px;margin-top:6px;font-size:12px"><span style="color:#5b6b8a">예측시간 <b class="cb">0.08초</b></span><span style="color:#5b6b8a">탄력도 <b class="co">3.2</b></span></div><div style="font-size:12px;color:#5b6b8a;margin-top:4px">상 변화 감지: <b class="cg">감지중</b></div><div class="ai-grid"><div class="ai-cell"><div class="ai-cv co">85°C</div><div class="ai-cl">온도</div></div><div class="ai-cell"><div class="ai-cv cb">150bar</div><div class="ai-cl">압력</div></div><div class="ai-cell"><div class="ai-cv cg">250L/m</div><div class="ai-cl">유량</div></div><div class="ai-cell"><div class="ai-cv cp">0.5A</div><div class="ai-cl">전류</div></div></div></div></div>
+
+  <!-- Special: Edge -->
+  <div class="nd-sp" id="ndEdge" style="left:790px;top:400px"><div class="sp-box" style="background:rgba(10,16,32,0.85);border:1.5px solid rgba(96,165,250,0.25)"><div style="font-size:14px;font-weight:700;color:#60a5fa;margin-bottom:4px">엣지 시스템</div><div style="font-size:13px"><div style="display:flex;justify-content:space-between;padding:2px 0;gap:20px"><span style="color:#5b6b8a">수집</span><span class="cg" style="font-weight:600">1초</span></div><div style="display:flex;justify-content:space-between;padding:2px 0"><span style="color:#5b6b8a">API</span><span class="cg" style="font-weight:600">8/8</span></div><div style="display:flex;justify-content:space-between;padding:2px 0"><span style="color:#5b6b8a">AutoDR</span><span class="co" style="font-weight:600">활성</span></div><div style="display:flex;justify-content:space-between;padding:2px 0"><span style="color:#5b6b8a">AGC</span><span class="cg" style="font-weight:600">18초</span></div></div></div></div>
+</div>
+
+<!-- ===== RIGHT PANEL ===== -->
+<div class="rp">
+  <div class="pt">선택 모터 제어</div>
+  <div class="ctrl" id="ctrlPanel">
+    <div class="ctrl-hd">
+      <div><div class="ctrl-sub" id="cStg">STAGE 1 선택</div><div class="ctrl-nm" id="cNm">원재료 투입·호퍼</div></div>
+      <span class="nc-bd bd-n" id="cBd">정상</span>
+    </div>
+    <div class="ctrl-motor" id="cMt">M1 — 호퍼 투입/건조 모터</div>
+    <div class="cv3">
+      <div class="cv"><div class="cvv cb" id="cvP">45</div><div class="cvl">전력(kW)</div></div>
+      <div class="cv"><div class="cvv cg" id="cvR">1,450</div><div class="cvl">RPM</div></div>
+      <div class="cv"><div class="cvv co" id="cvE">82%</div><div class="cvl">부하율</div></div>
+    </div>
+    <div class="sg"><div class="sl"><span class="sk">인버터 주파수</span><span class="sv cb" id="sHz">50 Hz</span></div><input type="range" min="0" max="60" value="50" class="sr-b" id="slHz" oninput="uHz(this.value)"><div class="st"><span>0</span><span>15</span><span>30</span><span>45</span><span>60Hz</span></div></div>
+    <div class="sg"><div class="sl"><span class="sk">목표 RPM</span><span class="sv cg" id="sRpm">1,450</span></div><input type="range" min="0" max="3000" value="1450" class="sr-g" id="slRpm" oninput="uRpm(this.value)"><div class="st"><span>0</span><span>750</span><span>1500</span><span>2250</span><span>3000</span></div></div>
+    <div class="sg"><div class="sl"><span class="sk">전력 제한</span><span class="sv co" id="sPwr">82%</span></div><input type="range" min="0" max="100" value="82" class="sr-o" id="slPwr" oninput="uPwr(this.value)"><div class="st"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div></div>
+    <div class="cb4">
+      <div class="cbtn cbtn-n" onclick="cmdManual()">🔧 수동 제어</div>
+      <div class="cbtn cbtn-a" onclick="cmdAI()">🤖 자동 AI</div>
+      <div class="cbtn cbtn-p" onclick="cmdROM()">📊 ROM 재학습</div>
+      <div class="cbtn cbtn-s" onclick="cmdST()">⛔ 긴급 정지</div>
+    </div>
+  </div>
+
+  <div class="pt">상세 정보</div>
+  <div class="dtl" id="dtlArea">
+    <div class="dtl-row"><span class="dk">정격</span><span class="dv" id="dRated">55 kW</span></div>
+    <div class="dtl-row"><span class="dk">전류</span><span class="dv" id="dAmp">78 A</span></div>
+    <div class="dtl-row"><span class="dk">역률</span><span class="dv" id="dPf">0.91</span></div>
+    <div class="dtl-row"><span class="dk">온도</span><span class="dv" id="dTemp">42°C</span></div>
+    <div class="dtl-row"><span class="dk">추가</span><span class="dv" id="dExtra">건조온도 80°C</span></div>
+    <div class="dtl-row"><span class="dk">DR절감</span><span class="dv" id="dDr">—</span></div>
+  </div>
+
+  <div class="pt" style="margin-top:4px">AI 알고리즘 로그</div>
+  <div id="aiLogArea">
+    <div class="adr ai"><span class="adr-t">14:22</span><span class="adr-d">ROM: 부하 예측 모델 갱신 완료</span></div>
+    <div class="adr ai"><span class="adr-t">14:20</span><span class="adr-d">AI: 상 변화 패턴 학습 완료</span></div>
+    <div class="adr ai"><span class="adr-t">14:15</span><span class="adr-d">적응제어: 최적 운전점 도달</span></div>
+    <div class="adr ai"><span class="adr-t">14:12</span><span class="adr-d">ROM: 예측 정확도 98.76% 달성</span></div>
+  </div>
+
+  <div class="pt" style="margin-top:4px">OpenADR 이벤트</div>
+  <div class="adr dn"><span class="adr-t">10:00</span><span class="adr-d">오전 완료 (480kW)</span></div>
+  <div class="adr ac"><span class="adr-t">13:00</span><span class="adr-d">DR 감발 진행 (600kW)</span></div>
+  <div class="adr sc"><span class="adr-t">15:30</span><span class="adr-d">피크 추가 감발 예정</span></div>
+
+  <div class="pt" style="margin-top:4px">시스템</div>
+  <div class="syg">
+    <div class="syc"><div class="syt cb">엣지</div><div class="syr"><span class="k">수집</span><span class="v cg">1초</span></div><div class="syr"><span class="k">API</span><span class="v cg">8/8</span></div></div>
+    <div class="syc"><div class="syt cp">AI엔진</div><div class="syr"><span class="k">ROM</span><span class="v cp">v2.4</span></div><div class="syr"><span class="k">정확</span><span class="v cg">98.76%</span></div></div>
+  </div>
+
+  <div class="pt" style="margin-top:4px">AI 모델 설정</div>
+  <div class="ai-set">
+    <div class="as-row"><span class="ak">모델 상태</span><span class="av cg">최적화 완료</span></div>
+    <div class="as-row"><span class="ak">학습 정확도</span><span class="av cp">98.76%</span></div>
+    <div class="as-row"><span class="ak">ROM 연산 속도</span><span class="av cb">0.08초</span></div>
+    <div class="as-row"><span class="ak">DR 대응</span><span class="av co">준비완료</span></div>
+  </div>
+
+  <label class="bg-btn" style="margin-top:6px;cursor:pointer">📷 배경 이미지 불러오기<input type="file" accept="image/*" style="display:none" onchange="loadBg(event)"></label>
+  <div class="bg-btn" onclick="clearBg()" style="background:rgba(248,113,113,0.06);border-color:rgba(248,113,113,0.25);color:#f87171;margin-top:3px">🗑 배경 제거</div>
+</div>
+
+<!-- ===== BOTTOM BAR ===== -->
+<div class="bb">
+  <div class="bb-i">M1 <span class="bb-v cg">45kW</span></div><div class="bb-s"></div>
+  <div class="bb-i">M2 <span class="bb-v cg">155kW</span></div><div class="bb-s"></div>
+  <div class="bb-i">M3 <span class="bb-v cg">350kW</span></div><div class="bb-s"></div>
+  <div class="bb-i">M4 <span class="bb-v co">210kW▼70</span></div><div class="bb-s"></div>
+  <div class="bb-i">M5 <span class="bb-v cg">520kW</span></div><div class="bb-s"></div>
+  <div class="bb-i">M6 <span class="bb-v cg">380kW</span></div><div class="bb-s"></div>
+  <div class="bb-i">M7 <span class="bb-v co">94kW▼56</span></div><div class="bb-s"></div>
+  <div class="bb-i">M8 <span class="bb-v cg">15kW</span></div><div class="bb-s"></div>
+  <div class="bb-i">총 <span class="bb-v cb">1,769kW</span></div><div class="bb-s"></div>
+  <div class="bb-i">불량 <span class="bb-v cg">0.28%</span></div><div class="bb-s"></div>
+  <div class="bb-i">사이클 <span class="bb-v cp">38s</span></div>
+</div>
+
+</div><!-- /bd -->
+
+<script>
+const D={
+  1:{stg:'STAGE 1',nm:'원재료 투입·호퍼',mt:'M1 — 호퍼 투입/건조 모터',bd:'정상',bc:'bd-n',rt:55,pw:45,rpm:1450,hz:50,mx:3000,amp:78,pf:.91,tmp:42,ext:'건조온도 80°C',dr:'—'},
+  2:{stg:'STAGE 2',nm:'가열존 (배럴히터)',mt:'M2 — 배럴 히터존 5구간',bd:'정상',bc:'bd-n',rt:180,pw:155,rpm:0,hz:0,mx:0,amp:270,pf:.95,tmp:240,ext:'Z1:165°C Z2:200°C Z3:220°C Z4:240°C Z5:240°C',dr:'—'},
+  3:{stg:'STAGE 3',nm:'압출배럴·스크류',mt:'M3 — 압출기 주구동 모터',bd:'정상',bc:'bd-n',rt:400,pw:350,rpm:85,hz:42,mx:200,amp:590,pf:.94,tmp:68,ext:'배럴온도 240°C / 배압 150bar',dr:'—'},
+  4:{stg:'STAGE 4',nm:'VFD 사출유닛',mt:'M4 — VFD 사출 스크류 모터',bd:'DR',bc:'bd-d',rt:280,pw:210,rpm:250,hz:38,mx:500,amp:358,pf:.90,tmp:72,ext:'수지온도 235°C / 사출압 180MPa',dr:'-70 kW'},
+  5:{stg:'STAGE 5',nm:'금형·주전동기',mt:'M5 — 주전동기 메인 드라이브',bd:'정상',bc:'bd-n',rt:600,pw:520,rpm:1780,hz:55,mx:3000,amp:875,pf:.95,tmp:64,ext:'형체력 850ton / 금형온도 60°C',dr:'—'},
+  6:{stg:'STAGE 6',nm:'클램핑 유닛',mt:'M6 — 형체 클램핑 모터',bd:'정상',bc:'bd-n',rt:450,pw:380,rpm:1450,hz:50,mx:3000,amp:640,pf:.93,tmp:55,ext:'클램핑력 850ton / 유압압 210bar',dr:'—'},
+  7:{stg:'STAGE 7',nm:'냉각조 (쿨링)',mt:'M7 — 냉각수 순환 펌프',bd:'DR',bc:'bd-d',rt:150,pw:94,rpm:2900,hz:40,mx:3600,amp:162,pf:.89,tmp:38,ext:'냉각수온 25°C / 유량 250L/min',dr:'-56 kW'},
+  8:{stg:'STAGE 8',nm:'풀러·다이헤드',mt:'M8 — 풀러/인취기 모터',bd:'정상',bc:'bd-n',rt:22,pw:15,rpm:1450,hz:48,mx:3000,amp:26,pf:.88,tmp:35,ext:'인취속도 12m/min / 절단길이 1.2m',dr:'—'}
+};
+let cur=1;
+
+function sel(n){
+  cur=n;const d=D[n];
+  document.querySelectorAll('.mi').forEach(e=>{e.classList.remove('sel');e.style.color='';});
+  document.querySelector(`.mi[data-m="${n}"]`).classList.add('sel');
+  document.querySelectorAll('.nd').forEach(e=>e.classList.remove('sel'));
+  const nd=document.querySelector(`.nd[data-s="${n}"]`);if(nd)nd.classList.add('sel');
+  document.getElementById('cStg').textContent=d.stg+' 선택';
+  document.getElementById('cNm').textContent=d.nm;
+  document.getElementById('cMt').textContent=d.mt;
+  document.getElementById('cBd').textContent=d.bd;
+  document.getElementById('cBd').className='nc-bd '+d.bc;
+  document.getElementById('cBd').style.color='';
+  document.getElementById('slHz').value=d.hz;uHz(d.hz);
+  document.getElementById('slRpm').max=d.mx;document.getElementById('slRpm').value=d.rpm;uRpm(d.rpm);
+  const pct=d.rt>0?Math.round(d.pw/d.rt*100):0;document.getElementById('slPwr').value=pct;uPwr(pct);
+  document.getElementById('dRated').textContent=d.rt+' kW';
+  document.getElementById('dAmp').textContent=d.amp+' A';
+  document.getElementById('dPf').textContent=d.pf;
+  document.getElementById('dTemp').textContent=d.tmp+'°C';
+  document.getElementById('dExtra').textContent=d.ext;
+  document.getElementById('dDr').textContent=d.dr;
+  document.getElementById('dDr').style.color=d.dr==='—'?'#b0c4de':'#fb923c';
+}
+
+function uHz(v){document.getElementById('sHz').textContent=v+' Hz';}
+function uRpm(v){const f=Number(v).toLocaleString();document.getElementById('sRpm').textContent=f;document.getElementById('cvR').textContent=f;}
+function uPwr(v){const d=D[cur];const kw=Math.round(d.rt*v/100);document.getElementById('sPwr').textContent=v+'%';document.getElementById('cvP').textContent=kw;document.getElementById('cvE').textContent=v+'%';}
+
+function cmdDR(){const d=D[cur];const h=Math.round(d.hz*.7);document.getElementById('slHz').value=h;uHz(h);document.getElementById('slPwr').value=65;uPwr(65);document.getElementById('cBd').textContent='DR';document.getElementById('cBd').className='nc-bd bd-d';document.getElementById('cBd').style.color='';updateNodeState(cur,'d');syncMotorList(cur,true);}
+
+function cmdNR(){
+  const d=D[cur];
+  document.getElementById('slHz').value=d.hz;uHz(d.hz);
+  document.getElementById('slRpm').value=d.rpm;uRpm(d.rpm);
+  const pct=d.rt>0?Math.round(d.pw/d.rt*100):0;
+  document.getElementById('slPwr').value=pct;uPwr(pct);
+  document.getElementById('cBd').textContent='정상';
+  document.getElementById('cBd').className='nc-bd bd-n';
+  document.getElementById('cBd').style.color='';
+  updateNodeState(cur,'n');syncMotorList(cur,false);
+}
+
+function cmdManual(){
+  document.getElementById('cBd').textContent='수동';
+  document.getElementById('cBd').className='nc-bd bd-n';
+  document.getElementById('cBd').style.color='';
+  updateNodeState(cur,'n');syncMotorList(cur,false);
+}
+
+function cmdST(){
+  document.getElementById('slHz').value=0;uHz(0);
+  document.getElementById('slRpm').value=0;uRpm(0);
+  document.getElementById('slPwr').value=0;uPwr(0);
+  document.getElementById('cBd').textContent='정지';
+  document.getElementById('cBd').className='nc-bd bd-s';
+  document.getElementById('cBd').style.color='';
+  updateNodeState(cur,'n');syncMotorList(cur,false);
+}
+
+function cmdAI(){
+  const d=D[cur];
+  const optHz=Math.min(60,Math.round(d.hz*1.05));
+  document.getElementById('slHz').value=optHz;uHz(optHz);
+  const optPct=Math.min(100,90);
+  document.getElementById('slPwr').value=optPct;uPwr(optPct);
+  document.getElementById('cBd').textContent='AI자동';
+  document.getElementById('cBd').className='nc-bd bd-n';
+  document.getElementById('cBd').style.color='';
+  updateNodeState(cur,'n');syncMotorList(cur,false);
+}
+
+function cmdROM(){
+  document.getElementById('cBd').textContent='학습중';
+  document.getElementById('cBd').className='nc-bd bd-d';
+  document.getElementById('cBd').style.color='#a78bfa';
+  const logArea=document.getElementById('aiLogArea');
+  const now=new Date();
+  const ts=now.toTimeString().slice(0,5);
+  const entry=document.createElement('div');
+  entry.className='adr ai';
+  entry.innerHTML='<span class="adr-t">'+ts+'</span><span class="adr-d">ROM: S'+cur+' 재학습 시작</span>';
+  logArea.insertBefore(entry,logArea.firstChild);
+  setTimeout(()=>{
+    document.getElementById('cBd').textContent='정상';
+    document.getElementById('cBd').className='nc-bd bd-n';
+    document.getElementById('cBd').style.color='';
+    const done=document.createElement('div');
+    done.className='adr ai';
+    const now2=new Date();
+    done.innerHTML='<span class="adr-t">'+now2.toTimeString().slice(0,5)+'</span><span class="adr-d">ROM: S'+cur+' 재학습 완료 (98.76%)</span>';
+    logArea.insertBefore(done,logArea.firstChild);
+  },3000);
+}
+
+// Update center node st-n/st-d class
+function updateNodeState(stageNum,state){
+  const nd=document.querySelector(`.nd[data-s="${stageNum}"] .nc`);
+  if(!nd)return;
+  nd.classList.remove('st-n','st-d');
+  nd.classList.add(state==='d'?'st-d':'st-n');
+  const bd=nd.querySelector('.nc-bd');
+  if(bd){
+    if(state==='d'){bd.textContent='DR';bd.className='nc-bd bd-d';}
+    else{bd.textContent='정상';bd.className='nc-bd bd-n';}
+  }
+}
+
+// Sync left panel motor list indicator
+function syncMotorList(stageNum,isDR){
+  const mi=document.querySelector(`.mi[data-m="${stageNum}"]`);
+  if(!mi)return;
+  const ms=mi.querySelector('.ms');
+  if(isDR){
+    mi.classList.add('dr-row');
+    if(ms){ms.className='ms ms-o';}
+    const mp=mi.querySelector('.mp');
+    if(mp){mp.className='mp co';}
+  }else{
+    mi.classList.remove('dr-row');
+    if(ms){ms.className='ms ms-g';}
+    const mp=mi.querySelector('.mp');
+    if(mp){mp.className='mp cb';}
+  }
+}
+
+// Dynamic connection color based on D object DR state
+function getConnColor(fid,tid){
+  const fEl=document.getElementById(fid);
+  const tEl=document.getElementById(tid);
+  const fs=fEl?fEl.dataset.s:null;
+  const ts=tEl?tEl.dataset.s:null;
+  if(fs&&D[fs]&&D[fs].bc==='bd-d') return '#fb923c';
+  if(ts&&D[ts]&&D[ts].bc==='bd-d') return '#fb923c';
+  // Also check live node state
+  if(fEl){const nc=fEl.querySelector('.nc');if(nc&&nc.classList.contains('st-d'))return '#fb923c';}
+  if(tEl){const nc=tEl.querySelector('.nc');if(nc&&nc.classList.contains('st-d'))return '#fb923c';}
+  return '#1e3a5f';
+}
+
+// Drag
+let dragEl=null,ox,oy;
+document.querySelectorAll('.nd,.nd-sp').forEach(nd=>{
+  nd.addEventListener('mousedown',e=>{
+    if(e.target.tagName==='INPUT')return;
+    dragEl=nd;const r=nd.getBoundingClientRect();const cr=document.getElementById('center').getBoundingClientRect();
+    ox=e.clientX-r.left;oy=e.clientY-r.top;
+    nd.style.zIndex=30;
+    if(nd.dataset.s)sel(parseInt(nd.dataset.s));
+  });
+});
+document.addEventListener('mousemove',e=>{
+  if(!dragEl)return;
+  const cr=document.getElementById('center').getBoundingClientRect();
+  let x=e.clientX-cr.left-ox,y=e.clientY-cr.top-oy;
+  x=Math.max(0,Math.min(x,cr.width-dragEl.offsetWidth));
+  y=Math.max(0,Math.min(y,cr.height-dragEl.offsetHeight));
+  dragEl.style.left=x+'px';dragEl.style.top=y+'px';
+  drawConn();
+});
+document.addEventListener('mouseup',()=>{if(dragEl){dragEl.style.zIndex=dragEl.classList.contains('sel')?20:10;dragEl=null;}});
+
+// Connections
+const conns=[['nd1','nd2'],['nd2','nd3'],['nd3','nd4'],['nd4','nd5'],['nd5','nd6'],['nd6','nd7'],['nd7','nd8']];
+
+function drawConn(){
+  const svg=document.getElementById('connSvg');const ct=document.getElementById('center');
+  const cr=ct.getBoundingClientRect();
+  svg.setAttribute('viewBox',`0 0 ${cr.width} ${cr.height}`);
+  svg.style.width=cr.width+'px';svg.style.height=cr.height+'px';
+  svg.innerHTML='';
+  conns.forEach(([fid,tid])=>{
+    const f=document.getElementById(fid),t=document.getElementById(tid);
+    if(!f||!t)return;
+    const fx=f.offsetLeft+f.offsetWidth,fy=f.offsetTop+f.offsetHeight/2;
+    const tx=t.offsetLeft,ty=t.offsetTop+t.offsetHeight/2;
+    const dy=Math.abs(ty-fy);
+    let x1,y1,x2,y2;
+    if(dy>f.offsetHeight*0.8){
+      x1=f.offsetLeft+f.offsetWidth/2;y1=fy>ty?f.offsetTop:f.offsetTop+f.offsetHeight;
+      x2=t.offsetLeft+t.offsetWidth/2;y2=fy>ty?t.offsetTop+t.offsetHeight:t.offsetTop;
+    }else{x1=fx;y1=fy;x2=tx;y2=ty;}
+    const mx=(x1+x2)/2;
+    const col=getConnColor(fid,tid);
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`);
+    path.setAttribute('fill','none');path.setAttribute('stroke',col);path.setAttribute('stroke-width','2');
+    path.classList.add('conn-line');
+    const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    dot.setAttribute('cx',x2);dot.setAttribute('cy',y2);dot.setAttribute('r','4');dot.setAttribute('fill',col==='#fb923c'?'#fb923c':'#38bdf8');
+    svg.appendChild(path);svg.appendChild(dot);
+  });
+}
+setTimeout(drawConn,100);
+
+// BG
+function loadBg(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{const bg=document.getElementById('bgLayer');bg.innerHTML='';const img=document.createElement('img');img.src=ev.target.result;img.style.cssText='width:100%;height:auto;object-fit:contain;opacity:.45';bg.appendChild(img);};r.readAsDataURL(f);}
+function clearBg(){document.getElementById('bgLayer').innerHTML='<div class="ct-hint"><span>🏭</span>3D 공정 이미지를 배경으로 설정</div>';}
+
+// Clock — dynamic date (Bug 7 fix)
+function updateClock(){
+  const d=new Date();
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const day=String(d.getDate()).padStart(2,'0');
+  document.getElementById('clock').textContent=y+'-'+m+'-'+day+' '+d.toTimeString().slice(0,8);
+}
+updateClock();
+setInterval(updateClock,1000);
+</script>
+</body>
+</html>
