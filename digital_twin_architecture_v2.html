@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>경산시 디지털 트윈 시스템 구성도 및 대시보드 와이어프레임 v2</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', 'Malgun Gothic', sans-serif; background: #f0f4f8; color: #1a202c; }
+  .page { width: 1440px; margin: 0 auto; padding: 40px 20px; }
+  @media (max-width: 1480px) { .page { width: 100%; } }
+
+  h1 { text-align: center; font-size: 28px; color: #1a365d; margin-bottom: 8px; }
+  .subtitle { text-align: center; font-size: 14px; color: #718096; margin-bottom: 40px; }
+  .section-title {
+    font-size: 22px; font-weight: 700; color: #2d3748;
+    border-left: 4px solid #3182ce; padding-left: 12px; margin: 50px 0 24px;
+  }
+  .section-title .badge {
+    display: inline-block; background: #e53e3e; color: #fff; font-size: 10px;
+    padding: 2px 8px; border-radius: 10px; margin-left: 8px; vertical-align: middle;
+    font-weight: 600; letter-spacing: 0.5px;
+  }
+
+  .container {
+    background: #fff; border-radius: 16px; padding: 32px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08); margin-bottom: 20px;
+  }
+
+  /* ========== Tech Table ========== */
+  .tech-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .tech-table th { background: #2d3748; color: #fff; padding: 10px 14px; text-align: left; font-weight: 600; }
+  .tech-table td { padding: 10px 14px; border-bottom: 1px solid #e2e8f0; }
+  .tech-table tr:nth-child(even) td { background: #f7fafc; }
+  .tech-table .cat { font-weight: 700; color: #2d3748; white-space: nowrap; vertical-align: top; }
+
+  /* ========== Architecture Layers ========== */
+  .arch-row { display: flex; gap: 16px; margin-bottom: 16px; align-items: stretch; }
+  .layer { border-radius: 12px; padding: 16px; flex: 1; min-height: 80px; }
+  .layer-label {
+    font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+  }
+  .tech-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tech-tag {
+    background: rgba(255,255,255,0.85); border-radius: 6px; padding: 5px 10px;
+    font-size: 11.5px; font-weight: 500; border: 1px solid rgba(255,255,255,0.5);
+  }
+  .tech-tag.new {
+    border: 2px solid #e53e3e; position: relative;
+  }
+  .tech-tag.new::after {
+    content: 'NEW'; position: absolute; top: -8px; right: -6px;
+    background: #e53e3e; color: #fff; font-size: 7px; padding: 1px 4px;
+    border-radius: 4px; font-weight: 800;
+  }
+
+  .layer-iot { background: linear-gradient(135deg, #e6fffa, #b2f5ea); border: 2px solid #38b2ac; }
+  .layer-iot .layer-label { color: #234e52; } .layer-iot .tech-tag { color: #234e52; border-color: #81e6d9; }
+  .layer-data { background: linear-gradient(135deg, #ebf8ff, #bee3f8); border: 2px solid #4299e1; }
+  .layer-data .layer-label { color: #1a365d; } .layer-data .tech-tag { color: #1a365d; border-color: #90cdf4; }
+  .layer-ai { background: linear-gradient(135deg, #faf5ff, #e9d8fd); border: 2px solid #805ad5; }
+  .layer-ai .layer-label { color: #322659; } .layer-ai .tech-tag { color: #322659; border-color: #d6bcfa; }
+  .layer-twin { background: linear-gradient(135deg, #fffff0, #fefcbf); border: 2px solid #d69e2e; }
+  .layer-twin .layer-label { color: #744210; } .layer-twin .tech-tag { color: #744210; border-color: #f6e05e; }
+  .layer-verify { background: linear-gradient(135deg, #fff5f7, #fdd); border: 2px solid #d53f8c; }
+  .layer-verify .layer-label { color: #702459; } .layer-verify .tech-tag { color: #702459; border-color: #fbb6ce; }
+  .layer-app { background: linear-gradient(135deg, #fff5f5, #fed7d7); border: 2px solid #e53e3e; }
+  .layer-app .layer-label { color: #742a2a; } .layer-app .tech-tag { color: #742a2a; border-color: #feb2b2; }
+  .layer-ext { background: linear-gradient(135deg, #f0fff4, #c6f6d5); border: 2px solid #38a169; }
+  .layer-ext .layer-label { color: #22543d; } .layer-ext .tech-tag { color: #22543d; border-color: #9ae6b4; }
+  .layer-infra { background: linear-gradient(135deg, #edf2f7, #e2e8f0); border: 2px solid #718096; }
+  .layer-infra .layer-label { color: #2d3748; } .layer-infra .tech-tag { color: #2d3748; border-color: #cbd5e0; }
+
+  .flow-arrow { text-align: center; font-size: 22px; color: #a0aec0; margin: 4px 0; letter-spacing: 16px; }
+  .arch-note {
+    margin-top: 16px; padding: 12px 16px; background: #edf2f7; border-radius: 8px;
+    font-size: 12px; color: #4a5568; line-height: 1.7;
+  }
+
+  /* ========== Agent Flow Diagram ========== */
+  .agent-flow {
+    display: flex; align-items: center; justify-content: center; gap: 0; margin: 24px 0;
+    flex-wrap: wrap;
+  }
+  .agent-box {
+    border-radius: 12px; padding: 14px 18px; text-align: center; min-width: 160px;
+    font-size: 12px; font-weight: 600; position: relative;
+  }
+  .agent-box .agent-icon { font-size: 28px; display: block; margin-bottom: 6px; }
+  .agent-box .agent-name { font-size: 13px; font-weight: 800; margin-bottom: 4px; }
+  .agent-box .agent-desc { font-size: 10px; font-weight: 400; opacity: 0.8; }
+  .agent-arrow {
+    font-size: 20px; color: #805ad5; padding: 0 8px; font-weight: 700;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+  }
+  .agent-arrow .arrow-label { font-size: 9px; color: #a0aec0; font-weight: 500; }
+  .agent-monitor { background: #c6f6d5; border: 2px solid #38a169; color: #22543d; }
+  .agent-predict { background: #bee3f8; border: 2px solid #3182ce; color: #1a365d; }
+  .agent-decision { background: #e9d8fd; border: 2px solid #805ad5; color: #322659; }
+  .agent-orchestrator { background: #fed7d7; border: 2px solid #e53e3e; color: #742a2a; }
+
+  /* ========== Decision Tree ========== */
+  .decision-tree {
+    display: flex; flex-direction: column; align-items: center; gap: 0; margin: 24px auto;
+    max-width: 900px;
+  }
+  .dt-node {
+    border-radius: 10px; padding: 10px 20px; font-size: 12px; text-align: center;
+    font-weight: 600; min-width: 280px;
+  }
+  .dt-condition { background: #fefcbf; border: 2px solid #d69e2e; color: #744210; clip-path: polygon(15% 0, 85% 0, 100% 50%, 85% 100%, 15% 100%, 0% 50%); padding: 16px 40px; }
+  .dt-action-safe { background: #c6f6d5; border: 2px solid #38a169; color: #22543d; }
+  .dt-action-warn { background: #fefcbf; border: 2px solid #d69e2e; color: #744210; }
+  .dt-action-danger { background: #fed7d7; border: 2px solid #e53e3e; color: #742a2a; }
+  .dt-arrow { font-size: 18px; color: #a0aec0; margin: 4px 0; }
+  .dt-branch { display: flex; gap: 40px; align-items: flex-start; }
+  .dt-branch-label { font-size: 10px; color: #718096; font-weight: 600; text-align: center; margin-bottom: 4px; }
+
+  /* ========== Wireframe Common ========== */
+  .wf-browser { border: 2px solid #cbd5e0; border-radius: 12px; overflow: hidden; background: #f7fafc; margin-bottom: 24px; }
+  .wf-titlebar {
+    background: #2d3748; color: #fff; padding: 10px 16px; display: flex;
+    align-items: center; gap: 8px; font-size: 13px;
+  }
+  .wf-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .wf-dot.r { background: #fc8181; } .wf-dot.y { background: #f6e05e; } .wf-dot.g { background: #68d391; }
+  .wf-titlebar-text { margin-left: 12px; font-weight: 600; }
+
+  .wf-body { display: grid; grid-template-columns: 220px 1fr; grid-template-rows: 56px 1fr; min-height: 700px; }
+  .wf-topbar {
+    grid-column: 1 / -1; background: #1a365d; color: #fff;
+    display: flex; align-items: center; padding: 0 20px; gap: 24px; font-size: 13px;
+  }
+  .wf-logo { font-weight: 800; font-size: 16px; color: #63b3ed; }
+  .wf-nav-item { padding: 4px 12px; border-radius: 6px; cursor: pointer; }
+  .wf-nav-item.active { background: rgba(255,255,255,0.15); }
+  .wf-topbar-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+  .wf-alert-badge { background: #e53e3e; color: #fff; font-size: 11px; border-radius: 10px; padding: 2px 8px; font-weight: 700; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+  .wf-sidebar { background: #edf2f7; border-right: 1px solid #e2e8f0; padding: 16px; font-size: 12px; }
+  .wf-sidebar-section { margin-bottom: 20px; }
+  .wf-sidebar-title { font-weight: 700; font-size: 11px; color: #718096; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .wf-sidebar-item { padding: 8px 10px; border-radius: 6px; margin-bottom: 4px; cursor: pointer; display: flex; align-items: center; gap: 8px; color: #4a5568; }
+  .wf-sidebar-item:hover { background: #e2e8f0; }
+  .wf-sidebar-item.active { background: #3182ce; color: #fff; }
+  .wf-status-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .wf-status-dot.green { background: #48bb78; } .wf-status-dot.yellow { background: #ecc94b; } .wf-status-dot.red { background: #f56565; }
+
+  .wf-main { padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .wf-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; }
+  .wf-card-title { font-size: 12px; font-weight: 700; color: #718096; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .wf-full { grid-column: 1 / -1; }
+
+  .wf-status-row { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .wf-stat-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; text-align: center; }
+  .wf-stat-label { font-size: 11px; color: #a0aec0; margin-bottom: 4px; }
+  .wf-stat-value { font-size: 24px; font-weight: 800; }
+  .wf-stat-value.safe { color: #38a169; } .wf-stat-value.warn { color: #d69e2e; }
+  .wf-stat-value.danger { color: #e53e3e; } .wf-stat-value.info { color: #3182ce; }
+  .wf-stat-sub { font-size: 10px; color: #a0aec0; margin-top: 2px; }
+
+  .wf-map {
+    grid-column: 1 / -1; background: linear-gradient(135deg, #1a365d 0%, #2a4365 40%, #2c5282 100%);
+    border-radius: 10px; min-height: 280px; position: relative; overflow: hidden; border: 1px solid #2d3748;
+  }
+  .wf-map-label { position: absolute; top: 12px; left: 14px; color: #63b3ed; font-size: 12px; font-weight: 700; }
+  .wf-map-controls { position: absolute; top: 12px; right: 14px; display: flex; gap: 6px; }
+  .wf-map-btn { background: rgba(255,255,255,0.15); color: #fff; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer; }
+  .river { position: absolute; }
+  .river-main { bottom: 60px; left: 80px; right: 200px; height: 30px; background: linear-gradient(90deg, rgba(99,179,237,0.3), rgba(99,179,237,0.6), rgba(99,179,237,0.3)); border-radius: 4px; }
+  .river-branch { bottom: 90px; left: 350px; width: 20px; height: 120px; background: linear-gradient(180deg, rgba(99,179,237,0.2), rgba(99,179,237,0.5)); border-radius: 4px; }
+  .wf-marker { position: absolute; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; font-weight: 700; cursor: pointer; box-shadow: 0 0 8px rgba(0,0,0,0.3); }
+  .wf-marker.sensor { background: #48bb78; } .wf-marker.cctv { background: #4299e1; }
+  .wf-marker.barrier { background: #ed8936; } .wf-marker.alert { background: #f56565; animation: pulse 1.5s infinite; }
+  .wf-map-legend { position: absolute; bottom: 12px; left: 14px; display: flex; gap: 12px; font-size: 10px; color: #a0aec0; }
+  .wf-legend-item { display: flex; align-items: center; gap: 4px; }
+  .wf-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  .wf-chart-area { height: 120px; background: #f7fafc; border-radius: 8px; position: relative; overflow: hidden; border: 1px dashed #e2e8f0; }
+
+  .wf-agent-panel { grid-column: 1 / -1; }
+  .wf-agent-body { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .wf-chat-area { background: #f7fafc; border-radius: 8px; padding: 10px; font-size: 11px; max-height: 160px; overflow-y: auto; }
+  .wf-chat-msg { margin-bottom: 8px; padding: 6px 10px; border-radius: 8px; line-height: 1.5; }
+  .wf-chat-msg.ai { background: #ebf8ff; color: #1a365d; border-left: 3px solid #3182ce; }
+  .wf-chat-msg.user { background: #f0fff4; color: #22543d; border-left: 3px solid #38a169; }
+  .wf-action-list { font-size: 11px; }
+  .wf-action-item { padding: 8px 10px; border-radius: 6px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; border: 1px solid #e2e8f0; }
+  .wf-action-item.urgent { border-color: #fc8181; background: #fff5f5; }
+  .wf-action-item.pending { border-color: #fbd38d; background: #fffff0; }
+  .wf-action-btn { margin-left: auto; padding: 3px 10px; border-radius: 4px; border: none; font-size: 10px; font-weight: 700; cursor: pointer; }
+  .wf-action-btn.approve { background: #48bb78; color: #fff; }
+  .wf-action-btn.reject { background: #fc8181; color: #fff; }
+
+  /* ========== New: Message Preview ========== */
+  .msg-preview {
+    background: #f7fafc; border: 1px dashed #cbd5e0; border-radius: 8px; padding: 12px;
+    font-size: 11px; color: #4a5568; line-height: 1.6; margin-top: 8px;
+  }
+  .msg-preview-header { font-weight: 700; color: #2d3748; margin-bottom: 6px; font-size: 12px; display: flex; align-items: center; gap: 6px; }
+  .msg-preview-badge { background: #e53e3e; color: #fff; font-size: 9px; padding: 1px 6px; border-radius: 4px; }
+  .msg-preview-body { background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 8px; }
+  .msg-preview-footer { display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* ========== Sensor Status Panel ========== */
+  .sensor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; font-size: 10px; }
+  .sensor-item { padding: 8px; border-radius: 6px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 6px; }
+  .sensor-item.ok { background: #f0fff4; border-color: #c6f6d5; }
+  .sensor-item.warn { background: #fffff0; border-color: #fefcbf; }
+  .sensor-item.error { background: #fff5f5; border-color: #fed7d7; }
+  .sensor-status-icon { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ========== Simulation Tab ========== */
+  .sim-controls { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; align-items: end; margin-bottom: 16px; }
+  .sim-control-group { font-size: 11px; }
+  .sim-control-group label { display: block; font-weight: 700; color: #718096; margin-bottom: 4px; }
+  .sim-select, .sim-input {
+    width: 100%; padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 6px;
+    font-size: 12px; background: #fff; color: #2d3748;
+  }
+  .sim-run-btn {
+    padding: 8px 24px; background: #3182ce; color: #fff; border: none;
+    border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer;
+  }
+  .sim-result-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; }
+  .sim-map-area {
+    background: linear-gradient(135deg, #1a365d, #2c5282); border-radius: 10px;
+    min-height: 300px; position: relative; overflow: hidden;
+  }
+  .flood-overlay {
+    position: absolute; bottom: 40px; left: 120px; right: 250px; height: 80px;
+    background: rgba(229,62,62,0.25); border: 2px dashed rgba(229,62,62,0.6);
+    border-radius: 8px;
+  }
+  .flood-overlay-label {
+    position: absolute; top: 4px; left: 8px; color: #fc8181; font-size: 10px; font-weight: 700;
+  }
+  .sim-timeline {
+    background: #f7fafc; border-radius: 8px; padding: 12px; font-size: 11px;
+  }
+  .sim-timeline-item {
+    padding: 8px 0; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px;
+  }
+  .sim-timeline-item:last-child { border: none; }
+  .sim-time { font-weight: 700; color: #3182ce; min-width: 50px; }
+  .sim-event { color: #4a5568; }
+  .sim-badge { font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+  .sim-badge.danger { background: #fed7d7; color: #742a2a; }
+  .sim-badge.warn { background: #fefcbf; color: #744210; }
+  .sim-badge.info { background: #bee3f8; color: #1a365d; }
+
+  /* ========== History Tab ========== */
+  .history-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .history-table th { background: #edf2f7; padding: 8px 10px; text-align: left; font-weight: 700; color: #4a5568; border-bottom: 2px solid #e2e8f0; }
+  .history-table td { padding: 8px 10px; border-bottom: 1px solid #e2e8f0; }
+  .history-badge { font-size: 9px; padding: 2px 8px; border-radius: 10px; font-weight: 700; }
+  .history-badge.resolved { background: #c6f6d5; color: #22543d; }
+  .history-badge.active { background: #fed7d7; color: #742a2a; }
+  .report-gen-btn {
+    padding: 6px 16px; background: #805ad5; color: #fff; border: none;
+    border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;
+  }
+
+  /* ========== Mobile Wireframes ========== */
+  .mobile-row { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; }
+  .mobile-frame {
+    width: 320px; border: 3px solid #2d3748; border-radius: 32px; overflow: hidden;
+    background: #fff; box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  }
+  .mobile-notch {
+    background: #2d3748; height: 28px; display: flex; align-items: center;
+    justify-content: center; color: #a0aec0; font-size: 11px;
+  }
+  .mobile-topbar {
+    background: #1a365d; color: #fff; padding: 12px 16px; font-size: 14px; font-weight: 700;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .mobile-content { padding: 12px; min-height: 480px; font-size: 12px; }
+  .mobile-bottombar {
+    background: #edf2f7; padding: 10px; display: flex; justify-content: space-around;
+    font-size: 10px; color: #718096; border-top: 1px solid #e2e8f0;
+  }
+  .mobile-bottombar-item { text-align: center; }
+  .mobile-bottombar-item.active { color: #3182ce; font-weight: 700; }
+  .mobile-card {
+    background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 10px;
+    padding: 12px; margin-bottom: 10px;
+  }
+  .mobile-alert-card {
+    background: #fff5f5; border: 2px solid #fc8181; border-radius: 10px;
+    padding: 12px; margin-bottom: 10px;
+  }
+  .mobile-btn {
+    display: block; width: 100%; padding: 10px; border-radius: 8px; border: none;
+    font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; margin-bottom: 8px;
+  }
+  .mobile-btn.primary { background: #3182ce; color: #fff; }
+  .mobile-btn.danger { background: #e53e3e; color: #fff; }
+  .mobile-btn.ghost { background: #edf2f7; color: #4a5568; }
+  .mobile-label { font-size: 11px; font-weight: 700; color: #718096; margin-bottom: 6px; }
+  .mobile-value { font-size: 20px; font-weight: 800; margin-bottom: 2px; }
+
+  /* ========== KPI Dashboard ========== */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .kpi-card {
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px;
+    text-align: center; position: relative;
+  }
+  .kpi-card .kpi-label { font-size: 11px; color: #a0aec0; margin-bottom: 6px; }
+  .kpi-card .kpi-value { font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+  .kpi-card .kpi-target { font-size: 10px; color: #a0aec0; }
+  .kpi-card .kpi-bar { height: 6px; background: #edf2f7; border-radius: 3px; margin-top: 8px; overflow: hidden; }
+  .kpi-card .kpi-bar-fill { height: 100%; border-radius: 3px; }
+
+  .page-break { page-break-before: always; margin-top: 60px; }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <h1>경산시 디지털 트윈 기반 하천 침수 자동 대응 체계</h1>
+  <p class="subtitle">AI 에이전트 중심의 디지털 트윈 시스템 구성도 및 대시보드 와이어프레임 v2 — 보완 완료본</p>
+
+  <!-- ==================== SECTION 1: 제반기술 요약 ==================== -->
+  <div class="section-title">1. 디지털 트윈 제반기술 요약 <span class="badge">보완</span></div>
+
+  <div class="container">
+    <table class="tech-table">
+      <thead><tr><th>기술 영역</th><th>세부 기술</th><th>적용 내용</th></tr></thead>
+      <tbody>
+        <tr><td class="cat" rowspan="4">IoT 센서 계측</td><td>정밀 수위계</td><td>언더패스 6개소 및 하천 주요 지점 실시간 수위 측정</td></tr>
+        <tr><td>강우량계 / 유량계</td><td>하천 구역 30개소 IoT 센서 설치, 5분 간격 데이터 전송</td></tr>
+        <tr><td>LoRa / LTE 이중화 통신</td><td>센서 데이터 실시간 전송, 주요 지점 2개 이상 센서 배치</td></tr>
+        <tr><td>센서 고장 감지 / 자가진단</td><td>24시간 이상 신호 이상 시 자동 알림, 72시간 내 교체 보장</td></tr>
+
+        <tr><td class="cat" rowspan="3">AI 영상 분석</td><td>CCTV + IP 카메라</td><td>하천변 15개소 신규/기존 카메라, 적외선 야간 24시간 모니터링</td></tr>
+        <tr><td>YOLO 기반 객체 인식</td><td>수면 감지, 수위 역계산(가상 수위계, Virtual Gauge)</td></tr>
+        <tr><td>이상 상황 자동 감지</td><td>부유물, 쓰레기 적체, 제방 균열 감지 및 자동 보고</td></tr>
+
+        <tr><td class="cat" rowspan="4">디지털 트윈 엔진</td><td>3D 지형 모델링</td><td>드론 측량 + DEM 결합, cm 단위 정밀도 베이스맵 (교량·배수로·제방 포함)</td></tr>
+        <tr><td>HEC-RAS 2D 수리해석</td><td>강우 시나리오(10년/30년/50년 빈도)별 수위·유속·범람 시뮬레이션</td></tr>
+        <tr><td>GPU 병렬 연산</td><td>1시간 강우 시나리오 3분 이내 처리, What-if 분석</td></tr>
+        <tr><td style="font-weight:700; color:#d53f8c;">★ Backwater 역류 모의</td><td>금호강 본류 수위 상승 시 남천 역류(내수 배수 불량) 현상 가시화</td></tr>
+
+        <tr><td class="cat" rowspan="4">AI 에이전트</td><td>멀티 에이전트 구조</td><td>모니터링·예측·의사결정 에이전트 + 중앙 오케스트레이터</td></tr>
+        <tr><td>LLM 기반 의사결정 지원</td><td>재난 SOP 학습, 자연어 대화형 상황 보고 및 대응 가이드</td></tr>
+        <tr><td>규칙 기반 자동 판단</td><td>수위 임계치 + 강우량 + 시뮬레이션 결과 복합 조건 판단 (1/2단계 경보)</td></tr>
+        <tr><td style="font-weight:700; color:#d53f8c;">★ 에이전트 간 REST API 통신</td><td>독립 에이전트 간 실시간 이벤트 전파, 확장성/유지보수성 확보</td></tr>
+
+        <tr><td class="cat" rowspan="3">외부 데이터 연동</td><td>수자원공사 댐 방류 API</td><td>운문댐 실시간 방류량 수집 및 수위 예측 연동</td></tr>
+        <tr><td>농어촌공사 저수지 API</td><td>70여 개 농업용 저수지 수문 데이터 실시간 수용</td></tr>
+        <tr><td>기상청 초단기 강수 API</td><td>24시간 상시 강수 예보 기반 선제적 시뮬레이션</td></tr>
+
+        <tr><td class="cat" rowspan="3">현장 제어 시스템</td><td>하천 차단기 원격 제어</td><td>5개소 차단기, 승인 후 30초 이내 자동 작동</td></tr>
+        <tr><td>재난 문자 자동 발송</td><td>AI 에이전트가 문구 자동 생성 → 관리자 미리보기 → 승인 후 발송</td></tr>
+        <tr><td>이중 안전장치</td><td>수동 전환 기능, IoT 장비 이중화</td></tr>
+
+        <tr><td class="cat" rowspan="2" style="font-weight:700; color:#d53f8c;">★ 하이브리드<br>데이터 검증</td><td>IoT ↔ AI 영상 교차검증</td><td>정밀 수위계 데이터와 Virtual Gauge 상호 보정, 데이터 신뢰도 99% 이상 유지</td></tr>
+        <tr><td>센서 유실 대비 가상 계측</td><td>극한 홍수 시 물리적 센서 유실 시 AI 영상 역계산으로 수위 측정 계속</td></tr>
+
+        <tr><td class="cat" rowspan="3">인프라 / 표준</td><td>TTAK 연합 표준 (Part 12)</td><td>데이터 연합(Data Federation) 기반 외부 데이터 동기화</td></tr>
+        <tr><td>SaaS 구독 모델</td><td>클라우드 기반 서비스, 원격 업그레이드, 타 지자체 확산 (월 300만 원)</td></tr>
+        <tr><td>기존 스마트시티 플랫폼 연동</td><td>2023년 구축 통합플랫폼 관제센터 화면에 실시간 데이터 표시</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== SECTION 2: 시스템 구성도 ==================== -->
+  <div class="section-title">2. 시스템 구성도 (Architecture Diagram) <span class="badge">보완</span></div>
+
+  <div class="container">
+    <!-- Layer 1 -->
+    <div class="arch-row">
+      <div class="layer layer-iot">
+        <div class="layer-label">📡 현장 센서 계층 (Field Sensor Layer)</div>
+        <div class="tech-tags">
+          <span class="tech-tag">정밀 수위계 (6개소)</span>
+          <span class="tech-tag">강우량계</span>
+          <span class="tech-tag">유량계</span>
+          <span class="tech-tag">IoT 센서 (30개소)</span>
+          <span class="tech-tag">IP CCTV (15개소)</span>
+          <span class="tech-tag">적외선 카메라</span>
+          <span class="tech-tag">하천 차단기 (5개소)</span>
+          <span class="tech-tag">LoRa/LTE 이중화 게이트웨이</span>
+          <span class="tech-tag new">센서 자가진단 모듈</span>
+        </div>
+      </div>
+      <div class="layer layer-ext">
+        <div class="layer-label">🌐 외부 데이터 연동 (Data Federation)</div>
+        <div class="tech-tags">
+          <span class="tech-tag">수자원공사 댐 방류 API</span>
+          <span class="tech-tag">농어촌공사 저수지 API (70여 개)</span>
+          <span class="tech-tag">기상청 초단기 강수 API</span>
+          <span class="tech-tag">환경부 수위 관측소 (2개소)</span>
+          <span class="tech-tag">TTAK Part 12 표준</span>
+          <span class="tech-tag new">시민 제보 수위계 (앱 연동)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-arrow">▼ ▼ ▼ ▼ ▼</div>
+
+    <!-- Layer 2 -->
+    <div class="arch-row">
+      <div class="layer layer-data">
+        <div class="layer-label">🔄 데이터 수집 및 통합 계층 (Data Ingestion & Integration)</div>
+        <div class="tech-tags">
+          <span class="tech-tag">실시간 스트리밍 (5분 간격)</span>
+          <span class="tech-tag">REST API 수집기</span>
+          <span class="tech-tag">데이터 정규화/동기화</span>
+          <span class="tech-tag">센서 상태 모니터링</span>
+          <span class="tech-tag">이상치 탐지 필터</span>
+          <span class="tech-tag">시계열 DB 저장</span>
+          <span class="tech-tag">데이터 사일로 해소</span>
+          <span class="tech-tag">CCTV 영상 스트림</span>
+          <span class="tech-tag new">센서 고장 자동 알림 엔진</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-arrow">▼ ▼ ▼ ▼ ▼</div>
+
+    <!-- Layer 3: AI + Twin -->
+    <div class="arch-row">
+      <div class="layer layer-ai">
+        <div class="layer-label">🤖 AI 에이전트 계층 (Multi-Agent System)</div>
+        <div class="tech-tags">
+          <span class="tech-tag">모니터링 에이전트</span>
+          <span class="tech-tag">예측 에이전트</span>
+          <span class="tech-tag">의사결정 에이전트</span>
+          <span class="tech-tag">중앙 오케스트레이터</span>
+          <span class="tech-tag">LLM 대화형 지원</span>
+          <span class="tech-tag">재난 SOP 학습</span>
+          <span class="tech-tag new">REST API 기반 에이전트 간 통신</span>
+          <span class="tech-tag new">규칙 기반 1·2단계 경보 엔진</span>
+          <span class="tech-tag">YOLO 영상 분석</span>
+          <span class="tech-tag">가상 수위계 (Virtual Gauge)</span>
+          <span class="tech-tag new">재난 문자 문구 자동 생성</span>
+        </div>
+      </div>
+      <div class="layer layer-twin">
+        <div class="layer-label">🏗️ 디지털 트윈 엔진 (Digital Twin Engine)</div>
+        <div class="tech-tags">
+          <span class="tech-tag">3D 지형 모델 (cm 정밀도)</span>
+          <span class="tech-tag">HEC-RAS 2D 수리해석</span>
+          <span class="tech-tag">GPU 병렬 연산</span>
+          <span class="tech-tag">What-if 시뮬레이션</span>
+          <span class="tech-tag">Backwater 역류 모의</span>
+          <span class="tech-tag">범람 구역 가시화</span>
+          <span class="tech-tag">수계 네트워크 모델링</span>
+          <span class="tech-tag">성숙도 3단계(모의)</span>
+          <span class="tech-tag new">강우빈도 시나리오 (10/30/50년)</span>
+          <span class="tech-tag new">퇴수 시점 예측 모의</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-arrow">▼ ▼ ▼ ▼ ▼</div>
+
+    <!-- NEW Layer: 하이브리드 데이터 교차검증 -->
+    <div class="arch-row">
+      <div class="layer layer-verify">
+        <div class="layer-label">🔍 하이브리드 데이터 교차검증 계층 (Hybrid Data Verification) <span style="background:#d53f8c; color:#fff; font-size:9px; padding:1px 6px; border-radius:4px; margin-left:6px;">NEW</span></div>
+        <div class="tech-tags">
+          <span class="tech-tag new">IoT 수위계 ↔ AI 영상(Virtual Gauge) 상호 보정</span>
+          <span class="tech-tag new">실측값 vs 시뮬레이션 예측값 지속 비교·보정</span>
+          <span class="tech-tag new">센서 유실 시 AI 영상 역계산 자동 전환</span>
+          <span class="tech-tag new">데이터 신뢰도 99% 이상 유지 검증 로직</span>
+          <span class="tech-tag new">이중 센서 일치율 모니터링</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-arrow">▼ ▼ ▼ ▼ ▼</div>
+
+    <!-- Layer 4: App -->
+    <div class="arch-row">
+      <div class="layer layer-app">
+        <div class="layer-label">📊 응용 서비스 계층 (Application & Control Layer)</div>
+        <div class="tech-tags">
+          <span class="tech-tag">디지털트윈 관제 대시보드</span>
+          <span class="tech-tag">침수 15분 전 예보</span>
+          <span class="tech-tag">차단기 원격 제어 (반자동)</span>
+          <span class="tech-tag">재난 문자 자동 발송</span>
+          <span class="tech-tag">AI 대화형 상황 보고</span>
+          <span class="tech-tag">재난 대응 백서 자동 생성</span>
+          <span class="tech-tag">시민 모바일 앱</span>
+          <span class="tech-tag">시민 제보 수위계</span>
+          <span class="tech-tag">관리자 모바일 앱</span>
+          <span class="tech-tag">퇴수 시점 분석</span>
+          <span class="tech-tag new">재난 문자 미리보기/편집 UI</span>
+          <span class="tech-tag new">센서 상태 모니터링 패널</span>
+          <span class="tech-tag new">성과지표(KPI) 대시보드</span>
+          <span class="tech-tag new">유관기관 연락망 자동 연동</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-arrow">▼ ▼ ▼ ▼ ▼</div>
+
+    <!-- Layer 5: Infra -->
+    <div class="arch-row">
+      <div class="layer layer-infra">
+        <div class="layer-label">☁️ 인프라 계층 (Infrastructure)</div>
+        <div class="tech-tags">
+          <span class="tech-tag">클라우드 서버 (이중화)</span>
+          <span class="tech-tag">GPU 연산 서버</span>
+          <span class="tech-tag">99% 이상 가용률</span>
+          <span class="tech-tag">자동 백업</span>
+          <span class="tech-tag">장애 복구 프로세스</span>
+          <span class="tech-tag">SaaS 구독 모델</span>
+          <span class="tech-tag">원격 분기별 업데이트</span>
+          <span class="tech-tag">기존 스마트시티 플랫폼 연동</span>
+          <span class="tech-tag new">AI 모델 연간 재학습 파이프라인</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-note">
+      <strong>재난 전주기 대응 루프:</strong>
+      사전 예방(Pre) — 24시간 상시 시뮬레이션, 15분 전 침수 예보 →
+      현장 대응(During) — AI 임계점 판단, 관리자 승인, 차단기 즉시 제어, 재난문자 자동 발송 →
+      사후 분석(Post) — 퇴수 시점 결정, 통제 해제, 재난 대응 백서 자동 생성<br>
+      <strong style="color:#d53f8c;">★ 보완:</strong> 하이브리드 데이터 교차검증 계층 신설, 에이전트 간 REST API 통신 구조 명시, 센서 자가진단/고장 알림 추가
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 2-1: 에이전트 협업 흐름도 ==================== -->
+  <div class="section-title">2-1. 멀티 에이전트 협업 흐름도 <span class="badge">NEW</span></div>
+
+  <div class="container">
+    <div class="agent-flow">
+      <div class="agent-box agent-monitor">
+        <span class="agent-icon">📡</span>
+        <div class="agent-name">모니터링 에이전트</div>
+        <div class="agent-desc">센서·영상 데이터<br>실시간 수집·분석</div>
+      </div>
+      <div class="agent-arrow">
+        →<br><span class="arrow-label">수위 급상승<br>이벤트 전파</span>
+      </div>
+      <div class="agent-box agent-predict">
+        <span class="agent-icon">🔮</span>
+        <div class="agent-name">예측 에이전트</div>
+        <div class="agent-desc">디지털트윈 시뮬레이션<br>침수 시점·구역 판단</div>
+      </div>
+      <div class="agent-arrow">
+        →<br><span class="arrow-label">침수 위험<br>판단 결과</span>
+      </div>
+      <div class="agent-box agent-decision">
+        <span class="agent-icon">🧠</span>
+        <div class="agent-name">의사결정 에이전트</div>
+        <div class="agent-desc">차단기·문자·통보<br>대응 조치 제안</div>
+      </div>
+      <div class="agent-arrow">
+        →<br><span class="arrow-label">승인 요청</span>
+      </div>
+      <div style="text-align:center;">
+        <div style="background:#edf2f7; border:2px solid #cbd5e0; border-radius:12px; padding:14px 18px; min-width:120px;">
+          <span style="font-size:28px; display:block; margin-bottom:6px;">👤</span>
+          <div style="font-size:13px; font-weight:800; color:#2d3748;">관리자</div>
+          <div style="font-size:10px; color:#718096;">승인 / 거부</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin: 16px 0;">
+      <div style="display:inline-block; background:#fed7d7; border:2px solid #e53e3e; border-radius:12px; padding:14px 24px;">
+        <span style="font-size:28px;">🎯</span>
+        <div style="font-size:13px; font-weight:800; color:#742a2a; margin-top:4px;">중앙 오케스트레이터 (Orchestrator)</div>
+        <div style="font-size:10px; color:#742a2a;">모든 에이전트 간 조율 · 상태 관리 · 이벤트 라우팅 (REST API)</div>
+      </div>
+    </div>
+
+    <div class="arch-note">
+      <strong>에이전트 통신 규격:</strong> 에이전트 간 REST API 기반 이벤트 전파. 각 에이전트는 독립 마이크로서비스로 배포되며, 오케스트레이터가 이벤트 순서와 우선순위를 관리.
+      모니터링→예측→의사결정 순차 흐름 외에, 모니터링 에이전트가 이상 상황(부유물, 제방 균열)을 직접 의사결정 에이전트에 알리는 바이패스 경로도 존재.
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 2-2: 의사결정 트리 ==================== -->
+  <div class="section-title">2-2. 규칙 기반 경보 의사결정 트리 <span class="badge">NEW</span></div>
+
+  <div class="container">
+    <div class="decision-tree">
+      <div class="dt-node" style="background:#ebf8ff; border:2px solid #3182ce; color:#1a365d; border-radius:10px; padding:12px 24px;">
+        📡 실시간 데이터 입력: 수위 + 강우량 + 댐 방류량 + 시뮬레이션 결과
+      </div>
+      <div class="dt-arrow">▼</div>
+      <div class="dt-node" style="background:#fefcbf; border:2px solid #d69e2e; color:#744210; border-radius:50px; padding:12px 32px;">
+        수위 ≥ 경계수위 80%?
+      </div>
+      <div class="dt-arrow">▼</div>
+
+      <div class="dt-branch">
+        <div style="text-align:center;">
+          <div class="dt-branch-label">YES</div>
+          <div class="dt-node" style="background:#fefcbf; border:2px solid #d69e2e; color:#744210; border-radius:50px; padding:12px 24px; margin-bottom:8px;">
+            강우 ≥ 40mm/h<br>AND 시뮬 2h 내 범람?
+          </div>
+          <div class="dt-arrow">▼</div>
+          <div class="dt-branch" style="gap:20px;">
+            <div style="text-align:center;">
+              <div class="dt-branch-label">YES</div>
+              <div class="dt-node dt-action-danger" style="border-radius:10px; padding:12px;">
+                🔴 <strong>2단계 경보</strong><br>
+                차단기 작동 제안<br>재난 문자 발송 준비<br>유관기관 통보
+              </div>
+            </div>
+            <div style="text-align:center;">
+              <div class="dt-branch-label">NO</div>
+              <div class="dt-node dt-action-warn" style="border-radius:10px; padding:12px;">
+                🟡 <strong>1단계 경보</strong><br>
+                상황실 모니터링 강화<br>현장 대기 지시<br>시뮬레이션 주기 단축
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center;">
+          <div class="dt-branch-label">NO</div>
+          <div class="dt-node dt-action-safe" style="border-radius:10px; padding:12px;">
+            🟢 <strong>정상 관제</strong><br>
+            5분 주기 모니터링<br>24시간 상시 시뮬레이션
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-note">
+      <strong>복합 조건 판단:</strong> 단일 지표가 아닌 수위(80% 이상) + 강우량(40mm/h 이상) + 시뮬레이션 범람 예측(2시간 내)의 AND 조건 충족 시 2단계 경보 발령.
+      댐 방류량이 급증하는 경우(Backwater 시나리오)에는 수위 조건 없이도 별도 트리거 가능.
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 3: 실시간 관제 와이어프레임 ==================== -->
+  <div class="page-break"></div>
+  <div class="section-title">3. 대시보드 와이어프레임 — 실시간 관제 탭 <span class="badge">보완</span></div>
+
+  <div class="container">
+    <div class="wf-browser">
+      <div class="wf-titlebar">
+        <span class="wf-dot r"></span><span class="wf-dot y"></span><span class="wf-dot g"></span>
+        <span class="wf-titlebar-text">경산시 디지털트윈 하천 침수 관제 시스템 v2</span>
+      </div>
+      <div class="wf-body">
+        <div class="wf-topbar">
+          <span class="wf-logo">🌊 GS-FloodTwin</span>
+          <span class="wf-nav-item active">실시간 관제</span>
+          <span class="wf-nav-item">시뮬레이션</span>
+          <span class="wf-nav-item">이력 분석</span>
+          <span class="wf-nav-item">센서 상태</span>
+          <span class="wf-nav-item">성과지표</span>
+          <span class="wf-nav-item">설정</span>
+          <div class="wf-topbar-right">
+            <span class="wf-alert-badge">⚠ 경보 2건</span>
+            <span>👤 관리자</span>
+            <span>2026.08.15 14:32</span>
+          </div>
+        </div>
+
+        <div class="wf-sidebar">
+          <div class="wf-sidebar-section">
+            <div class="wf-sidebar-title">모니터링 지점</div>
+            <div class="wf-sidebar-item active"><span class="wf-status-dot red"></span> 백옥교 언더패스</div>
+            <div class="wf-sidebar-item"><span class="wf-status-dot yellow"></span> 영대교 하부</div>
+            <div class="wf-sidebar-item"><span class="wf-status-dot green"></span> 공룡교 하부</div>
+            <div class="wf-sidebar-item"><span class="wf-status-dot green"></span> 남천교 지점</div>
+            <div class="wf-sidebar-item"><span class="wf-status-dot green"></span> 금락교 지점</div>
+            <div class="wf-sidebar-item"><span class="wf-status-dot yellow"></span> 둔치 주차장</div>
+          </div>
+          <div class="wf-sidebar-section">
+            <div class="wf-sidebar-title">외부 데이터</div>
+            <div class="wf-sidebar-item"><span class="wf-status-dot green"></span> 운문댐 방류</div>
+            <div class="wf-sidebar-item"><span class="wf-status-dot green"></span> 기상청 강수</div>
+            <div class="wf-sidebar-item"><span class="wf-status-dot green"></span> 남매지 저수지</div>
+          </div>
+          <div class="wf-sidebar-section">
+            <div class="wf-sidebar-title">차단기 상태</div>
+            <div class="wf-sidebar-item"><span class="wf-status-dot red"></span> 백옥교 — 차단중</div>
+            <div class="wf-sidebar-item"><span class="wf-status-dot green"></span> 영대교 — 개방</div>
+            <div class="wf-sidebar-item"><span class="wf-status-dot green"></span> 공룡교 — 개방</div>
+          </div>
+          <!-- NEW: 데이터 검증 상태 -->
+          <div class="wf-sidebar-section">
+            <div class="wf-sidebar-title" style="color:#d53f8c;">★ 데이터 검증</div>
+            <div class="wf-sidebar-item"><span class="wf-status-dot green"></span> IoT↔AI 일치율 98.7%</div>
+            <div class="wf-sidebar-item"><span class="wf-status-dot green"></span> 실측↔예측 오차 ±0.12m</div>
+          </div>
+        </div>
+
+        <div class="wf-main">
+          <!-- Status cards -->
+          <div class="wf-status-row">
+            <div class="wf-stat-card"><div class="wf-stat-label">현재 수위 (백옥교)</div><div class="wf-stat-value danger">2.8m</div><div class="wf-stat-sub">경계수위 3.0m / ▲ 0.4m/h</div></div>
+            <div class="wf-stat-card"><div class="wf-stat-label">시간당 강우량</div><div class="wf-stat-value warn">42mm</div><div class="wf-stat-sub">임계치 30mm 초과</div></div>
+            <div class="wf-stat-card"><div class="wf-stat-label">운문댐 방류량</div><div class="wf-stat-value info">350㎥/s</div><div class="wf-stat-sub">30분 전 방류 개시</div></div>
+            <div class="wf-stat-card"><div class="wf-stat-label">침수 예측 리드타임</div><div class="wf-stat-value danger">12분</div><div class="wf-stat-sub">백옥교 침수 예상</div></div>
+          </div>
+
+          <!-- 3D Map -->
+          <div class="wf-map">
+            <div class="wf-map-label">🗺️ 3D 디지털트윈 — 경산시 남천 수계 (운문댐~금호강 합류부)</div>
+            <div class="wf-map-controls">
+              <button class="wf-map-btn">2D</button>
+              <button class="wf-map-btn" style="background:rgba(255,255,255,0.3)">3D</button>
+              <button class="wf-map-btn">범람 모의</button>
+              <button class="wf-map-btn">센서 표시</button>
+              <button class="wf-map-btn" style="background:rgba(213,63,140,0.5)">Backwater</button>
+            </div>
+            <div class="river river-main"></div>
+            <div class="river river-branch"></div>
+            <div class="wf-marker sensor" style="bottom:100px; left:120px;">S1</div>
+            <div class="wf-marker sensor" style="bottom:75px; left:250px;">S2</div>
+            <div class="wf-marker alert" style="bottom:68px; left:400px;">⚠</div>
+            <div class="wf-marker cctv" style="bottom:110px; left:340px;">C3</div>
+            <div class="wf-marker barrier" style="bottom:55px; left:430px;">B1</div>
+            <div class="wf-marker sensor" style="bottom:80px; left:550px;">S3</div>
+            <div class="wf-marker cctv" style="bottom:100px; left:650px;">C7</div>
+            <div class="wf-marker sensor" style="bottom:72px; left:750px;">S5</div>
+            <div class="wf-marker cctv" style="bottom:150px; left:360px;">C4</div>
+            <div class="wf-map-legend">
+              <span class="wf-legend-item"><span class="wf-legend-dot" style="background:#48bb78"></span> 수위계</span>
+              <span class="wf-legend-item"><span class="wf-legend-dot" style="background:#4299e1"></span> CCTV</span>
+              <span class="wf-legend-item"><span class="wf-legend-dot" style="background:#ed8936"></span> 차단기</span>
+              <span class="wf-legend-item"><span class="wf-legend-dot" style="background:#f56565"></span> 경보</span>
+              <span class="wf-legend-item" style="color:#63b3ed">━ 하천</span>
+              <span class="wf-legend-item" style="color:#d53f8c">┅ 역류 구간</span>
+            </div>
+            <div style="position:absolute; bottom:40px; right:14px; background:rgba(214,158,46,0.9); color:#fff; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:700;">
+              ▶ What-if: 50mm/h 시 15분 후 범람 구역
+            </div>
+          </div>
+
+          <!-- Charts -->
+          <div class="wf-card">
+            <div class="wf-card-title">📈 수위 변화 추이 (최근 6시간)</div>
+            <div class="wf-chart-area">
+              <svg width="100%" height="100%" viewBox="0 0 400 120">
+                <line x1="0" y1="30" x2="400" y2="30" stroke="#e2e8f0" stroke-dasharray="4"/>
+                <line x1="0" y1="60" x2="400" y2="60" stroke="#e2e8f0" stroke-dasharray="4"/>
+                <line x1="0" y1="90" x2="400" y2="90" stroke="#e2e8f0" stroke-dasharray="4"/>
+                <line x1="0" y1="25" x2="400" y2="25" stroke="#fc8181" stroke-dasharray="6,3" stroke-width="1.5"/>
+                <text x="350" y="22" fill="#fc8181" font-size="9">경계수위</text>
+                <polyline fill="none" stroke="#3182ce" stroke-width="2.5" points="0,100 30,98 60,95 90,90 120,85 150,78 180,70 210,60 240,52 270,45 300,38 330,33 360,30 390,28"/>
+                <polyline fill="rgba(49,130,226,0.1)" stroke="none" points="0,120 0,100 30,98 60,95 90,90 120,85 150,78 180,70 210,60 240,52 270,45 300,38 330,33 360,30 390,28 390,120"/>
+                <!-- Virtual Gauge line (NEW) -->
+                <polyline fill="none" stroke="#d53f8c" stroke-width="1.5" stroke-dasharray="3,3" points="0,102 30,99 60,96 90,91 120,86 150,79 180,71 210,61 240,53 270,46 300,39 330,34 360,31 390,29"/>
+                <text x="5" y="115" fill="#a0aec0" font-size="9">08:00</text>
+                <text x="190" y="115" fill="#a0aec0" font-size="9">11:00</text>
+                <text x="370" y="115" fill="#a0aec0" font-size="9">14:30</text>
+                <text x="5" y="10" fill="#4a5568" font-size="8" font-weight="600">실측 ━ / AI예측 ┅ / <tspan fill="#d53f8c">Virtual Gauge ┅</tspan></text>
+                <polyline fill="none" stroke="#e53e3e" stroke-width="2" stroke-dasharray="6,3" points="390,28 400,26"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="wf-card">
+            <div class="wf-card-title">🌧️ 시간별 강우량 (mm)</div>
+            <div class="wf-chart-area">
+              <svg width="100%" height="100%" viewBox="0 0 400 120">
+                <line x1="0" y1="40" x2="400" y2="40" stroke="#fc8181" stroke-dasharray="6,3" stroke-width="1"/>
+                <text x="340" y="37" fill="#fc8181" font-size="9">임계 30mm</text>
+                <rect x="15" y="95" width="25" height="15" fill="#90cdf4" rx="2"/>
+                <rect x="55" y="90" width="25" height="20" fill="#90cdf4" rx="2"/>
+                <rect x="95" y="85" width="25" height="25" fill="#90cdf4" rx="2"/>
+                <rect x="135" y="80" width="25" height="30" fill="#63b3ed" rx="2"/>
+                <rect x="175" y="70" width="25" height="40" fill="#63b3ed" rx="2"/>
+                <rect x="215" y="55" width="25" height="55" fill="#4299e1" rx="2"/>
+                <rect x="255" y="40" width="25" height="70" fill="#3182ce" rx="2"/>
+                <rect x="295" y="30" width="25" height="80" fill="#e53e3e" rx="2"/>
+                <rect x="335" y="20" width="25" height="90" fill="#e53e3e" rx="2"/>
+                <text x="20" y="115" fill="#a0aec0" font-size="8">06</text>
+                <text x="100" y="115" fill="#a0aec0" font-size="8">08</text>
+                <text x="180" y="115" fill="#a0aec0" font-size="8">10</text>
+                <text x="260" y="115" fill="#a0aec0" font-size="8">12</text>
+                <text x="340" y="115" fill="#a0aec0" font-size="8">14</text>
+              </svg>
+            </div>
+          </div>
+
+          <!-- AI Agent Panel (enhanced) -->
+          <div class="wf-card wf-agent-panel">
+            <div class="wf-card-title">🤖 AI 에이전트 의사결정 지원</div>
+            <div class="wf-agent-body">
+              <div>
+                <div style="font-size:11px; font-weight:600; color:#718096; margin-bottom:6px;">대화형 상황 보고</div>
+                <div class="wf-chat-area">
+                  <div class="wf-chat-msg ai">
+                    <strong>[예측 에이전트]</strong> 운문댐 방류량 350㎥/s 반영 시뮬레이션 결과, 백옥교 언더패스 약 12분 후 침수 임계수위(3.0m) 도달 예상. 즉시 차단 권고.
+                  </div>
+                  <div class="wf-chat-msg user">백옥교 차단기 작동 승인합니다.</div>
+                  <div class="wf-chat-msg ai">
+                    <strong>[의사결정 에이전트]</strong> 차단기 B01 작동 명령 전달 완료(14:30:15). 주민 대피 안내 문자 발송 준비. 아래 문구를 확인 후 승인해 주세요.
+                  </div>
+                </div>
+                <!-- NEW: 재난 문자 미리보기 -->
+                <div class="msg-preview">
+                  <div class="msg-preview-header">📱 재난 문자 미리보기 <span class="msg-preview-badge">자동생성</span></div>
+                  <div class="msg-preview-body">
+                    [경산시 긴급재난문자]<br>
+                    백옥교 언더패스 일대 하천 수위 상승으로 <strong>차량 진입이 통제</strong>됩니다.<br>
+                    해당 구간 우회하시기 바랍니다.<br>
+                    ▶ 우회경로: 경산로 → 중방로<br>
+                    ▶ 문의: 경산시 재난안전과 053-810-XXXX
+                  </div>
+                  <div class="msg-preview-footer">
+                    <button class="wf-action-btn" style="background:#edf2f7; color:#4a5568;">수정</button>
+                    <button class="wf-action-btn approve">발송 승인</button>
+                    <button class="wf-action-btn reject">취소</button>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:11px; font-weight:600; color:#718096; margin-bottom:6px;">대응 조치 목록</div>
+                <div class="wf-action-list">
+                  <div class="wf-action-item urgent">
+                    <span>🔴</span><span>백옥교 차단기 작동</span>
+                    <span style="color:#a0aec0; font-size:10px;">14:30</span>
+                    <span class="wf-action-btn" style="background:#a0aec0; color:#fff;">승인됨 ✓</span>
+                  </div>
+                  <div class="wf-action-item urgent">
+                    <span>🔴</span><span>주민 대피 문자 발송</span>
+                    <span style="color:#a0aec0; font-size:10px;">14:31</span>
+                    <button class="wf-action-btn approve">승인</button>
+                    <button class="wf-action-btn reject">거부</button>
+                  </div>
+                  <div class="wf-action-item pending">
+                    <span>🟡</span><span>영대교 사전 차단 검토</span>
+                    <span style="color:#a0aec0; font-size:10px;">14:32</span>
+                    <button class="wf-action-btn approve">승인</button>
+                    <button class="wf-action-btn reject">거부</button>
+                  </div>
+                  <div class="wf-action-item pending">
+                    <span>🟡</span><span>유관기관 상황 통보</span>
+                    <span style="color:#a0aec0; font-size:10px;">대기</span>
+                    <button class="wf-action-btn approve">승인</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-note">
+      <strong>실시간 관제 탭 보완사항:</strong>
+      ① 사이드바 하단에 <strong style="color:#d53f8c;">데이터 교차검증 상태</strong>(IoT↔AI 일치율, 실측↔예측 오차) 패널 추가
+      ② 수위 차트에 <strong style="color:#d53f8c;">Virtual Gauge 라인</strong> 추가 (핑크 점선)으로 IoT 대비 AI 영상 수위 비교 가시화
+      ③ AI 에이전트 패널에 <strong style="color:#d53f8c;">재난 문자 미리보기/편집 UI</strong> 추가 (자동 생성 문구 확인 → 수정 → 승인)
+      ④ 상단 네비게이션에 <strong style="color:#d53f8c;">센서 상태</strong>, <strong style="color:#d53f8c;">성과지표</strong> 탭 추가
+      ⑤ 맵 컨트롤에 <strong style="color:#d53f8c;">Backwater 역류 구간</strong> 토글 버튼 추가
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 4: 시뮬레이션 탭 ==================== -->
+  <div class="page-break"></div>
+  <div class="section-title">4. 대시보드 와이어프레임 — 시뮬레이션 탭 <span class="badge">NEW</span></div>
+
+  <div class="container">
+    <div class="wf-browser">
+      <div class="wf-titlebar">
+        <span class="wf-dot r"></span><span class="wf-dot y"></span><span class="wf-dot g"></span>
+        <span class="wf-titlebar-text">GS-FloodTwin — 시뮬레이션</span>
+      </div>
+      <div style="padding: 20px;">
+        <!-- Simulation controls -->
+        <div class="sim-controls">
+          <div class="sim-control-group">
+            <label>강우 시나리오</label>
+            <select class="sim-select">
+              <option>10년 빈도 (50mm/h)</option>
+              <option selected>30년 빈도 (70mm/h)</option>
+              <option>50년 빈도 (90mm/h)</option>
+              <option>사용자 정의...</option>
+            </select>
+          </div>
+          <div class="sim-control-group">
+            <label>댐 방류 시나리오</label>
+            <select class="sim-select">
+              <option>현재 방류량 유지</option>
+              <option selected>방류량 500㎥/s 가정</option>
+              <option>방류량 800㎥/s (최대)</option>
+            </select>
+          </div>
+          <div class="sim-control-group">
+            <label>저수지 조건</label>
+            <select class="sim-select">
+              <option selected>남매지 만수위 월류</option>
+              <option>정상 수위</option>
+            </select>
+          </div>
+          <button class="sim-run-btn">▶ 시뮬레이션 실행</button>
+        </div>
+
+        <div style="background:#f0fff4; border:1px solid #c6f6d5; border-radius:8px; padding:10px 14px; font-size:11px; color:#22543d; margin-bottom:16px;">
+          ✅ GPU 연산 완료 (소요시간: 2분 47초) — HEC-RAS 2D 수리해석 + Backwater 역류 모의 결과 표시 중
+        </div>
+
+        <!-- Simulation results -->
+        <div class="sim-result-grid">
+          <div class="sim-map-area">
+            <div style="position:absolute; top:12px; left:14px; color:#63b3ed; font-size:12px; font-weight:700;">🗺️ 범람 시뮬레이션 결과 — 30년 빈도</div>
+            <div class="river river-main"></div>
+            <div class="river river-branch"></div>
+            <!-- Flood overlay zones -->
+            <div class="flood-overlay">
+              <div class="flood-overlay-label">범람 예상 구역 (T+30min)</div>
+            </div>
+            <div style="position:absolute; bottom:120px; left:300px; right:400px; height:50px;
+                 background:rgba(229,62,62,0.15); border:1px dashed rgba(229,62,62,0.4); border-radius:6px;">
+              <div style="position:absolute; top:2px; left:6px; color:#fc8181; font-size:9px; font-weight:700;">역류 영향 구역</div>
+            </div>
+            <div class="wf-marker alert" style="bottom:68px; left:350px;">⚠</div>
+            <div class="wf-marker alert" style="bottom:55px; left:500px;">⚠</div>
+            <div class="wf-map-legend">
+              <span class="wf-legend-item"><span class="wf-legend-dot" style="background:rgba(229,62,62,0.5)"></span> 범람 구역</span>
+              <span class="wf-legend-item"><span class="wf-legend-dot" style="background:rgba(229,62,62,0.2)"></span> 역류 영향</span>
+              <span class="wf-legend-item" style="color:#63b3ed">━ 하천</span>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:12px; font-weight:700; color:#718096; margin-bottom:8px;">⏱️ 시뮬레이션 타임라인</div>
+            <div class="sim-timeline">
+              <div class="sim-timeline-item"><span class="sim-time">T+0</span><span class="sim-event">현재 상태 — 수위 2.8m</span><span class="sim-badge info">시작</span></div>
+              <div class="sim-timeline-item"><span class="sim-time">T+8분</span><span class="sim-event">백옥교 경계수위(3.0m) 도달</span><span class="sim-badge warn">경계</span></div>
+              <div class="sim-timeline-item"><span class="sim-time">T+12분</span><span class="sim-event">백옥교 침수 시작 (3.2m)</span><span class="sim-badge danger">침수</span></div>
+              <div class="sim-timeline-item"><span class="sim-time">T+18분</span><span class="sim-event">영대교 경계수위 도달</span><span class="sim-badge warn">경계</span></div>
+              <div class="sim-timeline-item"><span class="sim-time">T+25분</span><span class="sim-event">금호강 역류 시작 (Backwater)</span><span class="sim-badge danger">역류</span></div>
+              <div class="sim-timeline-item"><span class="sim-time">T+30분</span><span class="sim-event">둔치 주차장 범람 예상</span><span class="sim-badge danger">범람</span></div>
+              <div class="sim-timeline-item"><span class="sim-time">T+90분</span><span class="sim-event">퇴수 시작 예측 시점</span><span class="sim-badge info">퇴수</span></div>
+            </div>
+
+            <div style="margin-top:12px; font-size:12px; font-weight:700; color:#718096; margin-bottom:8px;">📊 주요 예측 수치</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:11px;">
+              <div style="background:#fff5f5; border:1px solid #fed7d7; border-radius:6px; padding:8px; text-align:center;">
+                <div style="color:#a0aec0; font-size:10px;">최대 예상 수위</div>
+                <div style="font-size:20px; font-weight:800; color:#e53e3e;">3.6m</div>
+              </div>
+              <div style="background:#fffff0; border:1px solid #fefcbf; border-radius:6px; padding:8px; text-align:center;">
+                <div style="color:#a0aec0; font-size:10px;">범람 면적</div>
+                <div style="font-size:20px; font-weight:800; color:#d69e2e;">1.2ha</div>
+              </div>
+              <div style="background:#ebf8ff; border:1px solid #bee3f8; border-radius:6px; padding:8px; text-align:center;">
+                <div style="color:#a0aec0; font-size:10px;">최대 유속</div>
+                <div style="font-size:20px; font-weight:800; color:#3182ce;">2.4m/s</div>
+              </div>
+              <div style="background:#f0fff4; border:1px solid #c6f6d5; border-radius:6px; padding:8px; text-align:center;">
+                <div style="color:#a0aec0; font-size:10px;">예상 퇴수 시간</div>
+                <div style="font-size:20px; font-weight:800; color:#38a169;">90분</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 5: 이력 분석 탭 ==================== -->
+  <div class="section-title">5. 대시보드 와이어프레임 — 이력 분석 탭 <span class="badge">NEW</span></div>
+
+  <div class="container">
+    <div class="wf-browser">
+      <div class="wf-titlebar">
+        <span class="wf-dot r"></span><span class="wf-dot y"></span><span class="wf-dot g"></span>
+        <span class="wf-titlebar-text">GS-FloodTwin — 이력 분석 (Post)</span>
+      </div>
+      <div style="padding: 20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <div style="font-size:16px; font-weight:700; color:#2d3748;">재난 대응 이력 (2019~2026)</div>
+          <div style="display:flex; gap:8px;">
+            <select class="sim-select" style="width:auto;"><option>전체 연도</option><option selected>2026년</option></select>
+            <button class="report-gen-btn">📄 재난 대응 백서 자동 생성</button>
+          </div>
+        </div>
+
+        <table class="history-table">
+          <thead>
+            <tr><th>일시</th><th>유형</th><th>위치</th><th>최대수위</th><th>리드타임</th><th>차단기</th><th>대응결과</th><th>백서</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>2026.08.15 14:30</td><td><span class="history-badge active">진행중</span></td>
+              <td>백옥교 언더패스</td><td>2.8m (진행중)</td><td>12분</td><td>작동 ✓</td>
+              <td>차단 완료, 문자 발송 완료</td><td>—</td>
+            </tr>
+            <tr>
+              <td>2026.07.22 09:15</td><td><span class="history-badge resolved">완료</span></td>
+              <td>영대교 하부</td><td>3.1m</td><td>18분</td><td>작동 ✓</td>
+              <td>인명피해 없음, 차량 우회 성공</td><td><button class="report-gen-btn" style="padding:3px 8px; font-size:10px;">열기</button></td>
+            </tr>
+            <tr>
+              <td>2026.06.30 22:40</td><td><span class="history-badge resolved">완료</span></td>
+              <td>둔치 주차장</td><td>2.6m</td><td>22분</td><td>미필요</td>
+              <td>경보 발령 후 자연 퇴수</td><td><button class="report-gen-btn" style="padding:3px 8px; font-size:10px;">열기</button></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Post analysis: 퇴수 시점 분석 -->
+        <div style="margin-top:20px; display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="wf-card">
+            <div class="wf-card-title">🔄 퇴수 시점 분석 (2026.07.22 사례)</div>
+            <div class="wf-chart-area" style="height:140px;">
+              <svg width="100%" height="100%" viewBox="0 0 400 140">
+                <line x1="0" y1="30" x2="400" y2="30" stroke="#fc8181" stroke-dasharray="4" stroke-width="1"/>
+                <text x="310" y="28" fill="#fc8181" font-size="8">침수수위</text>
+                <line x1="0" y1="80" x2="400" y2="80" stroke="#48bb78" stroke-dasharray="4" stroke-width="1"/>
+                <text x="310" y="78" fill="#48bb78" font-size="8">안전수위</text>
+                <polyline fill="none" stroke="#3182ce" stroke-width="2" points="0,80 40,60 80,40 120,30 160,28 200,32 240,40 280,55 320,68 360,78 400,82"/>
+                <polyline fill="rgba(49,130,226,0.08)" stroke="none" points="0,140 0,80 40,60 80,40 120,30 160,28 200,32 240,40 280,55 320,68 360,78 400,82 400,140"/>
+                <!-- Evacuation end point -->
+                <circle cx="360" cy="78" r="5" fill="#48bb78" stroke="#fff" stroke-width="2"/>
+                <text x="340" y="95" fill="#48bb78" font-size="9" font-weight="700">퇴수 완료</text>
+                <text x="5" y="130" fill="#a0aec0" font-size="9">09:00</text>
+                <text x="190" y="130" fill="#a0aec0" font-size="9">12:00</text>
+                <text x="370" y="130" fill="#a0aec0" font-size="9">15:00</text>
+              </svg>
+            </div>
+            <div style="font-size:10px; color:#718096; margin-top:6px;">
+              AI 분석: 퇴수 완료 시점 14:48 (예측 오차 ±12분) → 통제 해제 권고 15:00
+            </div>
+          </div>
+
+          <div class="wf-card">
+            <div class="wf-card-title">📋 재난 대응 백서 자동 생성</div>
+            <div style="font-size:11px; color:#4a5568; line-height:1.8;">
+              <div style="background:#f7fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; margin-bottom:8px;">
+                <strong>목차 (자동 구성)</strong><br>
+                1. 기상 및 수문 상황 요약<br>
+                2. AI 에이전트 판단 타임라인<br>
+                3. 대응 조치 이력 (차단기·문자·통보)<br>
+                4. 센서 데이터 분석 (수위·강우·유량)<br>
+                5. 시뮬레이션 vs 실제 비교 (정확도 평가)<br>
+                6. 퇴수 및 통제 해제 기록<br>
+                7. 개선 권고사항
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button class="report-gen-btn" style="font-size:11px;">📄 DOCX 다운로드</button>
+                <button class="report-gen-btn" style="font-size:11px; background:#3182ce;">📊 PDF 다운로드</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 6: 센서 상태 탭 ==================== -->
+  <div class="page-break"></div>
+  <div class="section-title">6. 대시보드 와이어프레임 — 센서 상태 모니터링 탭 <span class="badge">NEW</span></div>
+
+  <div class="container">
+    <div class="wf-browser">
+      <div class="wf-titlebar">
+        <span class="wf-dot r"></span><span class="wf-dot y"></span><span class="wf-dot g"></span>
+        <span class="wf-titlebar-text">GS-FloodTwin — 센서 상태 모니터링</span>
+      </div>
+      <div style="padding: 20px;">
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:20px;">
+          <div class="wf-stat-card"><div class="wf-stat-label">전체 센서</div><div class="wf-stat-value info">30</div><div class="wf-stat-sub">IoT 센서 총 개수</div></div>
+          <div class="wf-stat-card"><div class="wf-stat-label">정상 작동</div><div class="wf-stat-value safe">28</div><div class="wf-stat-sub">93.3%</div></div>
+          <div class="wf-stat-card"><div class="wf-stat-label">경고</div><div class="wf-stat-value warn">1</div><div class="wf-stat-sub">신호 불안정</div></div>
+          <div class="wf-stat-card"><div class="wf-stat-label">오류/교체필요</div><div class="wf-stat-value danger">1</div><div class="wf-stat-sub">24시간 이상 무신호</div></div>
+        </div>
+
+        <div style="font-size:13px; font-weight:700; color:#2d3748; margin-bottom:12px;">센서 개별 상태</div>
+        <div class="sensor-grid">
+          <div class="sensor-item ok"><span class="sensor-status-icon" style="background:#48bb78;"></span><span><strong>S01</strong> 백옥교 수위계</span><span style="margin-left:auto; color:#48bb78;">정상</span></div>
+          <div class="sensor-item ok"><span class="sensor-status-icon" style="background:#48bb78;"></span><span><strong>S02</strong> 영대교 수위계</span><span style="margin-left:auto; color:#48bb78;">정상</span></div>
+          <div class="sensor-item ok"><span class="sensor-status-icon" style="background:#48bb78;"></span><span><strong>S03</strong> 공룡교 수위계</span><span style="margin-left:auto; color:#48bb78;">정상</span></div>
+          <div class="sensor-item warn"><span class="sensor-status-icon" style="background:#ecc94b;"></span><span><strong>S04</strong> 남천교 강우계</span><span style="margin-left:auto; color:#d69e2e;">신호 불안정</span></div>
+          <div class="sensor-item ok"><span class="sensor-status-icon" style="background:#48bb78;"></span><span><strong>S05</strong> 금락교 수위계</span><span style="margin-left:auto; color:#48bb78;">정상</span></div>
+          <div class="sensor-item error"><span class="sensor-status-icon" style="background:#f56565;"></span><span><strong>S06</strong> 둔치 유량계</span><span style="margin-left:auto; color:#e53e3e;">무신호 26h</span></div>
+          <div class="sensor-item ok"><span class="sensor-status-icon" style="background:#48bb78;"></span><span><strong>C01</strong> CCTV 백옥교</span><span style="margin-left:auto; color:#48bb78;">정상</span></div>
+          <div class="sensor-item ok"><span class="sensor-status-icon" style="background:#48bb78;"></span><span><strong>C02</strong> CCTV 영대교</span><span style="margin-left:auto; color:#48bb78;">정상</span></div>
+          <div class="sensor-item ok"><span class="sensor-status-icon" style="background:#48bb78;"></span><span><strong>B01</strong> 차단기 백옥교</span><span style="margin-left:auto; color:#48bb78;">정상(차단중)</span></div>
+        </div>
+
+        <div style="margin-top:16px; background:#fff5f5; border:1px solid #fed7d7; border-radius:8px; padding:12px; font-size:11px;">
+          <strong style="color:#e53e3e;">⚠ 알림:</strong> S06(둔치 유량계) 26시간 무신호 감지. 자동 교체 요청이 접수되었습니다. (요청 시각: 08.15 12:32, 예상 교체: 08.16 09:00)
+          <br>→ 해당 지점은 현재 <strong>Virtual Gauge(AI 영상 분석)</strong>로 대체 측정 중입니다.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 7: 성과지표(KPI) 탭 ==================== -->
+  <div class="section-title">7. 대시보드 와이어프레임 — 성과지표(KPI) 대시보드 <span class="badge">NEW</span></div>
+
+  <div class="container">
+    <div class="wf-browser">
+      <div class="wf-titlebar">
+        <span class="wf-dot r"></span><span class="wf-dot y"></span><span class="wf-dot g"></span>
+        <span class="wf-titlebar-text">GS-FloodTwin — 성과지표 대시보드</span>
+      </div>
+      <div style="padding: 20px;">
+        <div style="font-size:11px; color:#718096; margin-bottom:16px;">실증 기간: 2026.01 ~ 2026.12 | 마지막 갱신: 2026.08.15 14:32</div>
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">침수 예측 정확도</div>
+            <div class="kpi-value" style="color:#38a169;">92%</div>
+            <div class="kpi-target">목표: 90% 이상 (가중치 40%)</div>
+            <div class="kpi-bar"><div class="kpi-bar-fill" style="width:92%; background:#48bb78;"></div></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">차단기 제어 성공률</div>
+            <div class="kpi-value" style="color:#38a169;">100%</div>
+            <div class="kpi-target">목표: 100% (가중치 35%)</div>
+            <div class="kpi-bar"><div class="kpi-bar-fill" style="width:100%; background:#48bb78;"></div></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">사전 예보 리드타임</div>
+            <div class="kpi-value" style="color:#38a169;">18분</div>
+            <div class="kpi-target">목표: 15분 이상 (가중치 25%)</div>
+            <div class="kpi-bar"><div class="kpi-bar-fill" style="width:100%; background:#48bb78;"></div></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">대응시간 단축률</div>
+            <div class="kpi-value" style="color:#38a169;">58%</div>
+            <div class="kpi-target">목표: 50% 이상</div>
+            <div class="kpi-bar"><div class="kpi-bar-fill" style="width:100%; background:#48bb78;"></div></div>
+          </div>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">서비스 이용률</div>
+            <div class="kpi-value" style="color:#3182ce;">85%</div>
+            <div class="kpi-target">목표: 80% 이상</div>
+            <div class="kpi-bar"><div class="kpi-bar-fill" style="width:85%; background:#4299e1;"></div></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">이용자 만족도</div>
+            <div class="kpi-value" style="color:#3182ce;">4.2<span style="font-size:14px;">/5</span></div>
+            <div class="kpi-target">목표: 4.0점 이상</div>
+            <div class="kpi-bar"><div class="kpi-bar-fill" style="width:84%; background:#4299e1;"></div></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">평균 응답 시간</div>
+            <div class="kpi-value" style="color:#38a169;">2.1<span style="font-size:14px;">초</span></div>
+            <div class="kpi-target">목표: 3초 이내</div>
+            <div class="kpi-bar"><div class="kpi-bar-fill" style="width:100%; background:#48bb78;"></div></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">시스템 가용률</div>
+            <div class="kpi-value" style="color:#38a169;">99.7%</div>
+            <div class="kpi-target">목표: 99% 이상</div>
+            <div class="kpi-bar"><div class="kpi-bar-fill" style="width:99.7%; background:#48bb78;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 8: 모바일 앱 와이어프레임 ==================== -->
+  <div class="page-break"></div>
+  <div class="section-title">8. 모바일 앱 와이어프레임 — 관리자 / 시민 <span class="badge">NEW</span></div>
+
+  <div class="container">
+    <div class="mobile-row">
+      <!-- 관리자 모바일 앱 -->
+      <div>
+        <div style="text-align:center; font-size:14px; font-weight:700; color:#1a365d; margin-bottom:12px;">관리자 모바일 앱</div>
+        <div class="mobile-frame">
+          <div class="mobile-notch">14:32 ━━━ 📶 🔋 92%</div>
+          <div class="mobile-topbar">🌊 GS-FloodTwin <span style="margin-left:auto; font-size:11px; font-weight:400;">관리자</span></div>
+          <div class="mobile-content">
+            <!-- Push alert -->
+            <div class="mobile-alert-card">
+              <div style="font-size:13px; font-weight:800; color:#e53e3e; margin-bottom:4px;">🚨 긴급 — 2단계 경보</div>
+              <div style="font-size:11px; color:#4a5568; line-height:1.6; margin-bottom:8px;">
+                백옥교 언더패스 수위 2.8m<br>
+                12분 내 침수 예상<br>
+                <strong>AI 권고: 즉시 차단</strong>
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button class="mobile-btn danger" style="flex:1; margin:0;">차단 승인</button>
+                <button class="mobile-btn ghost" style="flex:1; margin:0;">상세 확인</button>
+              </div>
+            </div>
+
+            <div class="mobile-card">
+              <div class="mobile-label">현재 수위</div>
+              <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                <div class="mobile-value" style="color:#e53e3e;">2.8m</div>
+                <div style="font-size:11px; color:#a0aec0;">경계 3.0m</div>
+              </div>
+              <div style="height:4px; background:#edf2f7; border-radius:2px; margin-top:6px; overflow:hidden;">
+                <div style="height:100%; width:93%; background:#e53e3e; border-radius:2px;"></div>
+              </div>
+            </div>
+
+            <div class="mobile-card">
+              <div class="mobile-label">대기 중 승인 요청</div>
+              <div style="font-size:11px; line-height:2;">
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span style="color:#e53e3e;">🔴</span> 주민 대피 문자 발송
+                  <span style="margin-left:auto; font-size:10px; color:#a0aec0;">14:31</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span style="color:#ecc94b;">🟡</span> 영대교 사전 차단 검토
+                  <span style="margin-left:auto; font-size:10px; color:#a0aec0;">14:32</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="mobile-card">
+              <div class="mobile-label">차단기 상태</div>
+              <div style="font-size:11px; line-height:2;">
+                <div>백옥교 B01 — <span style="color:#e53e3e; font-weight:700;">차단중</span></div>
+                <div>영대교 B02 — <span style="color:#48bb78;">개방</span></div>
+                <div>공룡교 B03 — <span style="color:#48bb78;">개방</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="mobile-bottombar">
+            <div class="mobile-bottombar-item active">📊<br>관제</div>
+            <div class="mobile-bottombar-item">🔔<br>알림</div>
+            <div class="mobile-bottombar-item">🎛️<br>제어</div>
+            <div class="mobile-bottombar-item">⚙️<br>설정</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 시민 모바일 앱 -->
+      <div>
+        <div style="text-align:center; font-size:14px; font-weight:700; color:#1a365d; margin-bottom:12px;">시민 모바일 앱</div>
+        <div class="mobile-frame">
+          <div class="mobile-notch">14:32 ━━━ 📶 🔋 78%</div>
+          <div class="mobile-topbar" style="background:#2c5282;">🌊 경산 하천안전 <span style="margin-left:auto; font-size:11px; font-weight:400;">시민</span></div>
+          <div class="mobile-content">
+            <!-- Alert banner -->
+            <div class="mobile-alert-card">
+              <div style="font-size:13px; font-weight:800; color:#e53e3e; margin-bottom:4px;">⚠️ 백옥교 일대 차량 통제 중</div>
+              <div style="font-size:11px; color:#4a5568; line-height:1.6;">
+                하천 수위 상승으로 백옥교 언더패스가 통제되었습니다.<br>
+                <strong>우회경로:</strong> 경산로 → 중방로
+              </div>
+            </div>
+
+            <!-- Map preview -->
+            <div class="mobile-card" style="padding:0; overflow:hidden;">
+              <div style="background:linear-gradient(135deg,#1a365d,#2c5282); height:140px; position:relative;">
+                <div style="position:absolute; top:8px; left:10px; color:#63b3ed; font-size:11px; font-weight:700;">🗺️ 실시간 하천 지도</div>
+                <div style="position:absolute; bottom:50px; left:40px; right:40px; height:12px; background:rgba(99,179,237,0.4); border-radius:3px;"></div>
+                <div class="wf-marker alert" style="width:18px; height:18px; bottom:42px; left:120px; font-size:8px;">!</div>
+                <div style="position:absolute; bottom:8px; left:10px; right:10px; display:flex; gap:8px; font-size:9px; color:#a0aec0;">
+                  <span>🟢 안전</span> <span>🟡 주의</span> <span>🔴 위험</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="mobile-card">
+              <div class="mobile-label">내 주변 수위 현황</div>
+              <div style="font-size:11px; line-height:2;">
+                <div style="display:flex; justify-content:space-between;">
+                  <span>🔴 백옥교</span><span style="font-weight:700; color:#e53e3e;">2.8m (위험)</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                  <span>🟡 영대교</span><span style="font-weight:700; color:#d69e2e;">1.9m (주의)</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                  <span>🟢 공룡교</span><span style="font-weight:700; color:#48bb78;">0.8m (안전)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 시민 제보 수위계 -->
+            <div class="mobile-card" style="border:2px dashed #805ad5;">
+              <div class="mobile-label" style="color:#805ad5;">📸 시민 제보 수위계</div>
+              <div style="font-size:11px; color:#4a5568; margin-bottom:8px;">
+                하천 사진을 촬영하면 AI가 수위를 자동 분석합니다
+              </div>
+              <button class="mobile-btn primary" style="background:#805ad5;">📷 하천 사진 촬영하기</button>
+            </div>
+          </div>
+          <div class="mobile-bottombar">
+            <div class="mobile-bottombar-item active">🗺️<br>지도</div>
+            <div class="mobile-bottombar-item">📊<br>수위</div>
+            <div class="mobile-bottombar-item">📸<br>제보</div>
+            <div class="mobile-bottombar-item">⚙️<br>설정</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-note" style="margin-top:20px;">
+      <strong>모바일 앱 와이어프레임 설명:</strong><br>
+      ① <strong>관리자 앱:</strong> 긴급 푸시 알림으로 AI 에이전트의 승인 요청을 수신. 현장 외 이동 중에도 차단기 승인, 재난 문자 승인 가능. 차단기 상태 및 수위 실시간 모니터링.<br>
+      ② <strong>시민 앱:</strong> 하천 수위 위험등급 지도, 대피 경로 안내, 실시간 통제 정보 제공. <strong style="color:#805ad5;">시민 제보 수위계</strong> 기능으로 시민이 촬영한 하천 사진을 AI가 수위 분석하여 모니터링 보완.
+    </div>
+  </div>
+
+</div><!-- end page -->
+</body>
+</html>
